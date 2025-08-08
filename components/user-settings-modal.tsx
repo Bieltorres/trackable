@@ -11,23 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  MapPin,
-  Shield,
-  Key,
-  CreditCard,
-  Eye,
-  EyeOff,
-  Save,
-  Trash2,
-  Plus,
-  Check,
-  AlertTriangle,
-} from "lucide-react"
+import { User, Mail, Phone, Calendar, MapPin, Shield, Key, CreditCard, Eye, EyeOff, Save, Trash2, Plus, Check, AlertTriangle } from 'lucide-react'
 
 interface UserSettingsModalProps {
   isOpen: boolean
@@ -78,6 +62,7 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isStripeLoading, setIsStripeLoading] = useState(false)
 
   // Estados para os formulários
   const [dadosGerais, setDadosGerais] = useState(userData)
@@ -128,6 +113,31 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const handleDefinirPrincipal = (id: number) => {
     // Simular definir como principal
     alert("Cartão definido como principal!")
+  }
+
+  async function handleOpenStripePortal() {
+    try {
+      setIsStripeLoading(true)
+      const res = await fetch("/api/stripe/create-portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Optional: include a customerId if you have it in session/context
+        body: JSON.stringify({}),
+      })
+      if (!res.ok) {
+        throw new Error("Falha ao criar sessão do Portal de Cobrança")
+      }
+      const data = await res.json()
+      if (data?.url) {
+        window.location.href = data.url
+      } else {
+        alert("Não foi possível abrir o portal da Stripe.")
+      }
+    } catch (e) {
+      alert("Erro ao redirecionar para a Stripe. Tente novamente.")
+    } finally {
+      setIsStripeLoading(false)
+    }
   }
 
   const getBandeiraIcon = (bandeira: string) => {
@@ -482,58 +492,34 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
           <TabsContent value="pagamento" className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Cartões Salvos
-                  </CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Cartão
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Gerenciar Pagamentos (Stripe)
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {metodosPagemento.map((cartao) => (
-                  <div
-                    key={cartao.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-2xl">{getBandeiraIcon(cartao.bandeira)}</div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{cartao.bandeira}</p>
-                          <span className="text-muted-foreground">{cartao.numero}</span>
-                          {cartao.principal && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Check className="h-3 w-3 mr-1" />
-                              Principal
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {cartao.nome} • Válido até {cartao.validade}
-                        </p>
-                      </div>
-                    </div>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    O gerenciamento de cartões e métodos de pagamento é feito diretamente na Stripe.
+                    Clique no botão abaixo para acessar sua área segura e atualizar, adicionar ou remover cartões.
+                  </p>
+                </div>
+                <Button onClick={handleOpenStripePortal} disabled={isStripeLoading}>
+                  {isStripeLoading ? (
                     <div className="flex items-center gap-2">
-                      {!cartao.principal && (
-                        <Button variant="outline" size="sm" onClick={() => handleDefinirPrincipal(cartao.id)}>
-                          Definir como Principal
-                        </Button>
-                      )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoverCartao(cartao.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Redirecionando...
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Gerenciar pagamento na Stripe
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Você será redirecionado para o portal de faturamento da Stripe em uma nova página segura.
+                </p>
               </CardContent>
             </Card>
 
@@ -547,17 +533,17 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
               <CardContent className="space-y-3">
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>Segurança:</strong> Seus dados de pagamento são criptografados e protegidos por SSL.
+                    <strong>Segurança:</strong> Seus dados de pagamento são criptografados e protegidos por SSL na Stripe.
                   </p>
                 </div>
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800">
-                    <strong>Cobrança:</strong> O cartão principal será usado para renovações automáticas.
+                    <strong>Cobrança:</strong> O cartão principal definido na Stripe será usado para renovações automáticas.
                   </p>
                 </div>
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                   <p className="text-sm text-amber-800">
-                    <strong>Cancelamento:</strong> Você pode cancelar sua assinatura a qualquer momento.
+                    <strong>Cancelamento:</strong> Você pode gerenciar sua assinatura direto pelo portal da Stripe.
                   </p>
                 </div>
               </CardContent>
