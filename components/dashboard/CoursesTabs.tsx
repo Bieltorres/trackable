@@ -2,11 +2,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen } from "lucide-react";
 import { CourseCard } from "./CourseCard";
 
-interface Curso {
-  id: number;
+interface CursoComProgresso {
+  id: string;
   titulo: string;
   descricao: string;
-  thumbnail: string;
+  thumbnail?: string | null;
   progresso: number;
   duracaoTotal: string;
   aulasTotal: number;
@@ -15,25 +15,21 @@ interface Curso {
   nivel: string;
   instrutor: string;
   avaliacao: number;
-  dataInicio: string | null;
-  ultimaAula: string | null;
   status: string;
-  categoriaPersonalizada: string;
   adquirido: boolean;
-  preco: number | null;
-  precoOriginal: number | null;
-  desconto: number | null;
-  bestseller?: boolean;
-  novo?: boolean;
+  preco: number;
+  precoOriginal?: number | null;
+  desconto?: number | null;
+  mediaAvaliacoes?: number;
 }
 
 interface CoursesTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
-  cursosFiltrados: Curso[];
-  cursosFavoritos: number[];
-  onToggleFavorito: (cursoId: number) => void;
-  onCourseClick: (curso: Curso) => void;
+  cursosFiltrados: CursoComProgresso[];
+  cursosFavoritos: string[];
+  onToggleFavorito: (cursoId: string) => void;
+  onCourseClick: (curso: CursoComProgresso) => void;
 }
 
 export function CoursesTabs({

@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Curso {
-  id: number;
+interface CursoComProgresso {
+  id: string;
   titulo: string;
   descricao: string;
-  thumbnail: string;
+  thumbnail?: string | null;
   progresso: number;
   duracaoTotal: string;
   aulasTotal: number;
@@ -27,23 +27,19 @@ interface Curso {
   nivel: string;
   instrutor: string;
   avaliacao: number;
-  dataInicio: string | null;
-  ultimaAula: string | null;
   status: string;
-  categoriaPersonalizada: string;
   adquirido: boolean;
-  preco: number | null;
-  precoOriginal: number | null;
-  desconto: number | null;
-  bestseller?: boolean;
-  novo?: boolean;
+  preco: number;
+  precoOriginal?: number | null;
+  desconto?: number | null;
+  mediaAvaliacoes?: number;
 }
 
 interface CourseCardProps {
-  curso: Curso;
+  curso: CursoComProgresso;
   isFavorito: boolean;
-  onToggleFavorito: (cursoId: number) => void;
-  onCourseClick: (curso: Curso) => void;
+  onToggleFavorito: (cursoId: string) => void;
+  onCourseClick: (curso: CursoComProgresso) => void;
 }
 
 export function CourseCard({
@@ -75,22 +71,25 @@ export function CourseCard({
     }
   };
 
-  const getSpecialBadges = (curso: Curso) => {
+  const getSpecialBadges = (curso: CursoComProgresso) => {
     const badges = [];
 
-    if (curso.bestseller) {
+    // Verificar se é um curso popular (muitas inscrições)
+    if (curso.avaliacao >= 4.5) {
       badges.push(
         <Badge
           key="bestseller"
           className="bg-orange-100 text-orange-800 text-xs"
         >
           <Crown className="h-3 w-3 mr-1" />
-          Bestseller
+          Popular
         </Badge>
       );
     }
 
-    if (curso.novo) {
+    // Verificar se é um curso novo (criado recentemente)
+    const isNovo = new Date().getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000; // 30 dias
+    if (isNovo) {
       badges.push(
         <Badge key="novo" className="bg-green-100 text-green-800 text-xs">
           <Sparkles className="h-3 w-3 mr-1" />
@@ -110,7 +109,7 @@ export function CourseCard({
       {/* Imagem de fundo que preenche todo o card */}
       <div className="absolute inset-0">
         <img
-          src={curso.thumbnail || "/placeholder.svg"}
+          src={curso.thumbnail || "/placeholder.svg?height=200&width=300&text=" + encodeURIComponent(curso.titulo)}
           alt={curso.titulo}
           className="w-full h-full object-cover"
         />

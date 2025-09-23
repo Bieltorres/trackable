@@ -16,13 +16,34 @@ interface CategoriesProps {
   categorias: CategoriaPersonalizada[];
   categoriaSelecionada: string | null;
   onCategoriaSelect: (categoria: string | null) => void;
+  loading?: boolean;
 }
 
 export function Categories({
   categorias,
   categoriaSelecionada,
   onCategoriaSelect,
+  loading = false,
 }: CategoriesProps) {
+  if (loading) {
+    return (
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Categorias</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4">
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
