@@ -10,21 +10,58 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const router = useRouter()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simular login
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast({
+          title: "Erro ao fazer login",
+          description: data.error === "Invalid credentials" 
+            ? "Email ou senha incorretos" 
+            : "Ocorreu um erro ao fazer login",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Você será redirecionado...",
+      })
+
+      // Aguarda um pouco antes de redirecionar
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 1000)
+    } catch (error) {
+      toast({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor",
+        variant: "destructive",
+      })
       setIsLoading(false)
-      router.push("/dashboard")
-    }, 1000)
+    }
   }
 
   return (
@@ -40,7 +77,15 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="seu@email.com" className="pl-10" required />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="seu@email.com" 
+                  className="pl-10" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
               </div>
             </div>
 
@@ -58,6 +103,8 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Sua senha"
                   className="pl-10 pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
                 <Button
