@@ -1,1 +1,1 @@
-aider --browser --model claude-v1
+aider --browser --model "anthropic/claude-4"
