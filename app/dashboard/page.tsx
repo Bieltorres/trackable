@@ -1,51 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Clock,
-  BookOpen,
-  Award,
-  User,
-  Settings,
-  LogOut,
-  Search,
-  Star,
-  TrendingUp,
-  CheckCircle,
-  PlayCircle,
-  Home,
-  BarChart3,
-  FileText,
-  MessageCircle,
-  Menu,
-  X,
-  Heart,
-  Youtube,
-  BarChart,
-  Zap,
-  ChevronRight,
-  Plus,
-  ShoppingCart,
-  Crown,
-  Sparkles,
-  Shield,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { Home, BarChart3, FileText, MessageCircle, Shield, Youtube, BarChart, Zap } from "lucide-react";
 import { CourseModal } from "@/components/course-modal";
-import Link from "next/link";
 import { UserSettingsModal } from "@/components/user-settings-modal";
 import { AdminConfigModal } from "@/components/admin-config-modal";
 import { HeaderMain } from "@/components/layout/HeaderMain";
 import Sidebar from "@/components/layout/Sidebar";
+import { HeroBanner } from "@/components/dashboard/HeroBanner";
+import { StatsCards } from "@/components/dashboard/StatsCards";
+import { Categories } from "@/components/dashboard/Categories";
+import { Filters } from "@/components/dashboard/Filters";
+import { CoursesTabs } from "@/components/dashboard/CoursesTabs";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchCursos, fetchFavoritos, toggleFavorito } from "@/store/slices/cursosSlice";
+import { fetchUserProfile, fetchMeusCursos } from "@/store/slices/userSlice";
+import { Curso } from "@/types";
 
-// Simular usuário admin (em produção viria do contexto/auth)
-const isAdmin = true;
+const niveis = ["Todos", "iniciante", "intermediario", "avancado"];
 
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
@@ -56,31 +28,41 @@ const menuItems = [
 ];
 
 export default function DashboardPage() {
+  const dispatch = useAppDispatch();
+  const { cursos, favoritos, loading: cursosLoading } = useAppSelector((state) => state.cursos);
+  const { user, meusCursos, loading: userLoading, isAuthenticated } = useAppSelector((state) => state.user);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedNivel, setSelectedNivel] = useState("Todos");
   const [activeTab, setActiveTab] = useState("todos");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [cursosFavoritos, setCursosFavoritos] = useState<number[]>([]);
-  const [
-    categoriaPersonalizadaSelecionada,
-    setCategoriaPersonalizadaSelecionada,
-  ] = useState<string | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [categoriaPersonalizadaSelecionada, setCategoriaPersonalizadaSelecionada] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<Curso | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false);
 
-  const toggleFavorito = (cursoId: number) => {
-    setCursosFavoritos((prev) =>
-      prev.includes(cursoId)
-        ? prev.filter((id) => id !== cursoId)
-        : [...prev, cursoId]
-    );
+  // Carregar dados iniciais
+  useEffect(() => {
+    dispatch(fetchUserProfile());
+    dispatch(fetchCursos());
+    dispatch(fetchFavoritos());
+    dispatch(fetchMeusCursos());
+  }, [dispatch]);
+
+  const handleToggleFavorito = async (cursoId: string) => {
+    try {
+      await dispatch(toggleFavorito(cursoId)).unwrap();
+    } catch (error) {
+      console.error('Erro ao alterar favorito:', error);
+    }
   };
 
-  const handleCourseClick = (curso: any) => {
-    if (curso.adquirido) {
+  const handleCourseClick = (curso: Curso) => {
+    const cursoAdquirido = meusCursos.find(mc => mc.cursoId === curso.id);
+    
+    if (cursoAdquirido) {
       // Se o curso já foi adquirido, redireciona para a página de aulas
       window.location.href = `/curso/${curso.id}/aula/1`;
     } else {
@@ -96,7 +78,29 @@ export default function DashboardPage() {
     }
   };
 
-  const cursosFiltrados = cursos.filter((curso) => {
+  // Criar lista de categorias únicas dos cursos
+  const categorias = ["Todos", ...Array.from(new Set(cursos.map(c => c.categoria?.nome).filter(Boolean)))];
+
+  // Mapear cursos com informações de progresso dos meus cursos
+  const cursosComProgresso = cursos.map(curso => {
+    const meuCurso = meusCursos.find(mc => mc.cursoId === curso.id);
+    const totalAulas = curso.modulos?.reduce((acc, modulo) => acc + (modulo.aulas?.length || 0), 0) || 0;
+    
+    return {
+      ...curso,
+      adquirido: !!meuCurso,
+      progresso: meuCurso?.progresso || 0,
+      status: meuCurso?.status || 'disponivel',
+      aulasTotal: totalAulas,
+      aulasAssistidas: Math.floor((meuCurso?.progresso || 0) * totalAulas / 100),
+      duracaoTotal: "0h 0min", // TODO: calcular duração total das aulas
+      categoria: curso.categoria?.nome || 'Sem categoria',
+      instrutor: curso.instrutor?.name || 'Instrutor',
+      avaliacao: curso.mediaAvaliacoes || 0,
+    };
+  });
+
+  const cursosFiltrados = cursosComProgresso.filter((curso) => {
     const matchSearch = curso.titulo
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -104,95 +108,54 @@ export default function DashboardPage() {
       selectedCategory === "Todos" || curso.categoria === selectedCategory;
     const matchNivel =
       selectedNivel === "Todos" || curso.nivel === selectedNivel;
-    const matchCategoriaPersonalizada =
-      !categoriaPersonalizadaSelecionada ||
-      curso.categoriaPersonalizada === categoriaPersonalizadaSelecionada;
 
     let matchTab = true;
     if (activeTab === "meus-cursos") matchTab = curso.adquirido;
-    if (activeTab === "em-andamento")
-      matchTab = curso.status === "em-andamento";
+    if (activeTab === "em-andamento") matchTab = curso.status === "em-andamento";
     if (activeTab === "concluidos") matchTab = curso.status === "concluido";
-    if (activeTab === "disponivel") matchTab = curso.status === "disponivel";
-    if (activeTab === "nao-iniciados")
-      matchTab = curso.status === "nao-iniciado";
+    if (activeTab === "disponivel") matchTab = curso.status === "disponivel" || !curso.adquirido;
+    if (activeTab === "nao-iniciados") matchTab = curso.status === "nao-iniciado";
     if (activeTab === "todos") matchTab = true;
 
-    return (
-      matchSearch &&
-      matchCategory &&
-      matchNivel &&
-      matchTab &&
-      matchCategoriaPersonalizada
-    );
+    return matchSearch && matchCategory && matchNivel && matchTab;
   });
 
-  const cursosFavoritosData = cursos.filter((curso) =>
-    cursosFavoritos.includes(curso.id)
-  );
+  const cursosFavoritosIds = favoritos.map(f => f.cursoId);
 
   const estatisticas = {
-    cursosAtivos: cursos.filter((c) => c.status === "em-andamento").length,
-    cursosConcluidos: cursos.filter((c) => c.status === "concluido").length,
-    cursosAdquiridos: cursos.filter((c) => c.adquirido).length,
-    cursosDisponiveis: cursos.filter((c) => c.status === "disponivel").length,
-    horasAssistidas: cursos.reduce((acc, curso) => {
-      if (!curso.adquirido) return acc;
-      const horasPorAula =
-        Number.parseFloat(curso.duracaoTotal) / curso.aulasTotal;
-      return acc + curso.aulasAssistidas * horasPorAula;
-    }, 0),
+    cursosAtivos: meusCursos.filter((c) => c.status === "em-andamento").length,
+    cursosConcluidos: meusCursos.filter((c) => c.status === "concluido").length,
+    cursosAdquiridos: meusCursos.length,
+    cursosDisponiveis: cursos.length - meusCursos.length,
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "concluido":
-        return (
-          <Badge className="bg-green-100 text-green-800">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            Concluído
-          </Badge>
-        );
-      case "em-andamento":
-        return (
-          <Badge className="bg-blue-100 text-blue-800">
-            <PlayCircle className="h-3 w-3 mr-1" />
-            Em Andamento
-          </Badge>
-        );
-      case "nao-iniciado":
-        return <Badge variant="outline">Não Iniciado</Badge>;
-      default:
-        return null;
-    }
-  };
+  // Categorias personalizadas baseadas nos dados reais
+  const categoriasPersonalizadas = [
+    {
+      nome: "Material do Youtube",
+      icon: Youtube,
+      cor: "bg-red-500",
+      descricao: "Conteúdos exclusivos e materiais complementares",
+      cursos: cursos.filter(c => c.categoria?.nome === "Marketing").length,
+    },
+    {
+      nome: "Trackeamento",
+      icon: BarChart,
+      cor: "bg-blue-500",
+      descricao: "Ferramentas e estratégias de análise",
+      cursos: cursos.filter(c => c.categoria?.nome === "Analytics").length,
+    },
+    {
+      nome: "Automações",
+      icon: Zap,
+      cor: "bg-yellow-500",
+      descricao: "Sistemas automatizados para otimizar processos",
+      cursos: cursos.filter(c => c.categoria?.nome === "Automação").length,
+    },
+  ];
 
-  const getSpecialBadges = (curso: any) => {
-    const badges = [];
+  const isAdmin = user?.role === 'admin';
 
-    if (curso.bestseller) {
-      badges.push(
-        <Badge
-          key="bestseller"
-          className="bg-orange-100 text-orange-800 text-xs"
-        >
-          <Crown className="h-3 w-3 mr-1" />
-          Bestseller
-        </Badge>
-      );
-    }
-
-    if (curso.novo) {
-      badges.push(
-        <Badge key="novo" className="bg-green-100 text-green-800 text-xs">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Novo
-        </Badge>
-      );
-    }
-
-    return badges;
-  };
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -224,406 +187,58 @@ export default function DashboardPage() {
         {/* Main Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* Banner Hero */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 mb-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">
-                  Bem-vindo de volta, João!
-                </h2>
-                <p className="text-blue-100 mb-4">
-                  Continue seu aprendizado e alcance seus objetivos
-                </p>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    <span>3 cursos em andamento</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4" />
-                    <span>1 curso concluído</span>
-                  </div>
-                  {isAdmin && (
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      <span>Acesso administrativo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="hidden md:block">
-                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
-                  <BookOpen className="h-12 w-12 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroBanner
+            userName={user?.name || "Usuário"}
+            cursosEmAndamento={estatisticas.cursosAtivos}
+            cursosConcluidos={estatisticas.cursosConcluidos}
+            isAdmin={isAdmin}
+            loading={userLoading}
+          />
 
           {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 flex-shrink-0">
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Meus Cursos
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {estatisticas.cursosAdquiridos}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Cursos adquiridos
-                  </p>
-                </div>
-                <BookOpen className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Em Andamento
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {estatisticas.cursosAtivos}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Estudando agora
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Concluídos
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {estatisticas.cursosConcluidos}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Finalizados</p>
-                </div>
-                <Award className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Disponíveis
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {estatisticas.cursosDisponiveis}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Para adquirir</p>
-                </div>
-                <ShoppingCart className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </Card>
-          </div>
+          <StatsCards
+            cursosAdquiridos={estatisticas.cursosAdquiridos}
+            cursosAtivos={estatisticas.cursosAtivos}
+            cursosConcluidos={estatisticas.cursosConcluidos}
+            cursosDisponiveis={estatisticas.cursosDisponiveis}
+            loading={cursosLoading || userLoading}
+          />
 
           {/* Categorias Personalizadas */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Categorias
-              </h3>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Categoria
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {categoriasPersonalizadas.map((categoria) => (
-                <Card
-                  key={categoria.nome}
-                  className={cn(
-                    "cursor-pointer transition-all duration-200 hover:shadow-lg",
-                    categoriaPersonalizadaSelecionada === categoria.nome
-                      ? "ring-2 ring-blue-500"
-                      : ""
-                  )}
-                  onClick={() =>
-                    setCategoriaPersonalizadaSelecionada(
-                      categoriaPersonalizadaSelecionada === categoria.nome
-                        ? null
-                        : categoria.nome
-                    )
-                  }
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={cn("p-2 rounded-lg", categoria.cor)}>
-                        <categoria.icon className="h-5 w-5 text-white" />
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <h4 className="font-semibold text-gray-900 mb-1">
-                      {categoria.nome}
-                    </h4>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {categoria.descricao}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        {categoria.cursos} cursos
-                      </span>
-                      {categoriaPersonalizadaSelecionada === categoria.nome && (
-                        <Badge variant="secondary" className="text-xs">
-                          Selecionado
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <Categories
+            categorias={categoriasPersonalizadas}
+            categoriaSelecionada={categoriaPersonalizadaSelecionada}
+            onCategoriaSelect={setCategoriaPersonalizadaSelecionada}
+            loading={cursosLoading}
+          />
 
           {/* Filtros e Busca */}
-          <div className="flex flex-col lg:flex-row gap-4 mb-4 flex-shrink-0">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar cursos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                {categorias.map((categoria) => (
-                  <option key={categoria} value={categoria}>
-                    {categoria}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedNivel}
-                onChange={(e) => setSelectedNivel(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-              >
-                {niveis.map((nivel) => (
-                  <option key={nivel} value={nivel}>
-                    {nivel}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <Filters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedNivel={selectedNivel}
+            onNivelChange={setSelectedNivel}
+            categorias={categorias}
+            niveis={niveis}
+          />
 
           {/* Tabs de Organização */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="flex-1 flex flex-col"
-          >
-            <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
-              <TabsTrigger value="todos">
-                Todos ({cursosFiltrados.length})
-              </TabsTrigger>
-              <TabsTrigger value="meus-cursos">
-                Meus Cursos ({cursosFiltrados.filter((c) => c.adquirido).length}
-                )
-              </TabsTrigger>
-              <TabsTrigger value="em-andamento">
-                Em Andamento (
-                {
-                  cursosFiltrados.filter((c) => c.status === "em-andamento")
-                    .length
-                }
-                )
-              </TabsTrigger>
-              <TabsTrigger value="concluidos">
-                Concluídos (
-                {cursosFiltrados.filter((c) => c.status === "concluido").length}
-                )
-              </TabsTrigger>
-              <TabsTrigger value="disponivel">
-                Disponíveis (
-                {
-                  cursosFiltrados.filter((c) => c.status === "disponivel")
-                    .length
-                }
-                )
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={activeTab} className="flex-1 mt-4">
-              {/* Lista de Cursos */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                {cursosFiltrados.map((curso) => (
-                  <Card
-                    key={curso.id}
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer relative h-80"
-                    onClick={() => handleCourseClick(curso)}
-                  >
-                    {/* Imagem de fundo que preenche todo o card */}
-                    <div className="absolute inset-0">
-                      <img
-                        src={curso.thumbnail || "/placeholder.svg"}
-                        alt={curso.titulo}
-                        className="w-full h-full object-cover"
-                      />
-
-                      {/* Overlay gradient para melhor legibilidade */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    </div>
-
-                    {/* Badges no topo */}
-                    <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-                      <div className="flex flex-col gap-2">
-                        {/* Badges especiais */}
-                        {curso.adquirido ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorito(curso.id);
-                            }}
-                            className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors self-start"
-                            title={
-                              cursosFavoritos.includes(curso.id)
-                                ? "Remover dos favoritos"
-                                : "Adicionar aos favoritos"
-                            }
-                          >
-                            <Heart
-                              className={cn(
-                                "h-4 w-4 transition-colors",
-                                cursosFavoritos.includes(curso.id)
-                                  ? "text-red-500 fill-red-500"
-                                  : "text-white hover:text-red-300"
-                              )}
-                            />
-                          </button>
-                        ) : (
-                          <div className="flex flex-col gap-1">
-                            {getSpecialBadges(curso)}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Status badge */}
-                      <div>
-                        {curso.adquirido ? (
-                          getStatusBadge(curso.status)
-                        ) : (
-                          <Badge className="bg-green-500 text-white shadow-lg">
-                            <ShoppingCart className="h-3 w-3 mr-1" />
-                            Disponível
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Conteúdo na parte inferior */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-10">
-                      {/* Título e descrição */}
-                      <div className="mb-3">
-                        <h3 className="text-lg font-bold mb-1 line-clamp-2 leading-tight">
-                          {curso.titulo}
-                        </h3>
-                        <p className="text-sm text-gray-200 line-clamp-2 mb-2">
-                          {curso.descricao}
-                        </p>
-
-                        {/* Avaliação e instrutor - apenas quando disponível */}
-                        {curso.avaliacao && (
-                          <div className="flex items-center gap-2 text-sm text-gray-300 mb-3">
-                            <span className="flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              {curso.avaliacao}
-                            </span>
-                            <span>•</span>
-                            <span>{curso.instrutor}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Ação */}
-                      <div className="flex items-center justify-between">
-                        {!curso.adquirido ? (
-                          <>
-                            <div className="flex items-center gap-4 text-sm text-gray-300">
-                              <span className="flex items-center gap-1">
-                                <BookOpen className="h-3 w-3" />
-                                {curso.aulasTotal} aulas
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {curso.duracaoTotal}
-                              </span>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 shadow-lg"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCourseClick(curso);
-                              }}
-                            >
-                              <ShoppingCart className="h-4 w-4 mr-2" />
-                              Adquirir
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-4 text-sm text-gray-300">
-                              <span className="flex items-center gap-1">
-                                <BookOpen className="h-3 w-3" />
-                                {curso.aulasAssistidas}/{curso.aulasTotal} aulas
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {curso.duracaoTotal}
-                              </span>
-                            </div>
-
-                            {curso.progresso > 0 && (
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 bg-gray-700 rounded-full h-2">
-                                  <div
-                                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                                    style={{ width: `${curso.progresso}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-gray-300">
-                                  {curso.progresso}%
-                                </span>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-5" />
-                  </Card>
-                ))}
-              </div>
-
-              {cursosFiltrados.length === 0 && (
-                <div className="text-center py-12">
-                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Nenhum curso encontrado
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Tente ajustar os filtros ou termo de busca
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          {cursosLoading || userLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <CoursesTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              cursosFiltrados={cursosFiltrados}
+              cursosFavoritos={cursosFavoritosIds}
+              onToggleFavorito={handleToggleFavorito}
+              onCourseClick={handleCourseClick}
+            />
+          )}
         </main>
       </div>
 
