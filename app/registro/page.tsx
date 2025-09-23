@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Eye, EyeOff, User, Mail, Lock, Calendar, Phone } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 // Lista completa de países com códigos telefônicos e bandeiras
 const paises = [
@@ -517,6 +519,8 @@ export default function RegistroPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [paisSelecionado, setPaisSelecionado] = useState("+55");
   const [searchPais, setSearchPais] = useState("");
+  const { toast } = useToast();
+  const router = useRouter();
 
   const paisesFiltrados = paises.filter(
     (pais) =>
@@ -543,7 +547,11 @@ export default function RegistroPage() {
     const phone = (document.getElementById("phone") as HTMLInputElement).value;
 
     if (password !== confirmPassword) {
-      alert("As senhas não conferem");
+      toast({
+        title: "Erro",
+        description: "As senhas não conferem",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -562,11 +570,21 @@ export default function RegistroPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.error || "Erro ao registrar");
+      toast({
+        title: "Erro ao registrar",
+        description: data.error || "Ocorreu um erro ao criar sua conta",
+        variant: "destructive",
+      });
     } else {
-      alert("Conta criada com sucesso!");
-      // redirecionar pro login, se quiser:
-      // router.push("/login")
+      toast({
+        title: "Conta criada com sucesso!",
+        description: "Você será redirecionado para a página de login",
+      });
+      
+      // Aguarda 2 segundos antes de redirecionar
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     }
   };
 
