@@ -1,0 +1,21 @@
+// prisma/schema.prisma
+// Sempre que você altera o schema.prisma, precisa rodar: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // ou mysql/sqlite conforme o que você usar
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  birthdate DateTime?
+  phone     String?
+  createdAt DateTime @default(now())
+}
