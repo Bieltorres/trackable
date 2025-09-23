@@ -52,7 +52,9 @@ export function Filters({
         >
           {niveis.map((nivel) => (
             <option key={nivel} value={nivel}>
-              {nivel}
+              {nivel === 'iniciante' ? 'Iniciante' : 
+               nivel === 'intermediario' ? 'Intermediário' :
+               nivel === 'avancado' ? 'Avançado' : nivel}
             </option>
           ))}
         </select>

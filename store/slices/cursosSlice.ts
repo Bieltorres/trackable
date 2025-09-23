@@ -1,61 +1,33 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Curso, Favorito, CursosState, ApiResponse, PaginatedResponse } from '../../types';
+import { apiService } from '../../services/api';
 
 // Async thunks
 export const fetchCursos = createAsyncThunk(
   'cursos/fetchCursos',
   async (params?: { categoria?: string; nivel?: string; search?: string; page?: number; limit?: number }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.categoria) searchParams.append('categoria', params.categoria);
-    if (params?.nivel) searchParams.append('nivel', params.nivel);
-    if (params?.search) searchParams.append('search', params.search);
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-
-    const response = await fetch(`/api/cursos?${searchParams.toString()}`);
-    if (!response.ok) {
-      throw new Error('Erro ao buscar cursos');
-    }
-    return response.json();
+    return await apiService.getCursos(params);
   }
 );
 
 export const fetchCursoById = createAsyncThunk(
   'cursos/fetchCursoById',
   async (id: string) => {
-    const response = await fetch(`/api/cursos/${id}`);
-    if (!response.ok) {
-      throw new Error('Erro ao buscar curso');
-    }
-    return response.json();
+    return await apiService.getCursoById(id);
   }
 );
 
 export const fetchFavoritos = createAsyncThunk(
   'cursos/fetchFavoritos',
   async () => {
-    const response = await fetch('/api/favoritos');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar favoritos');
-    }
-    return response.json();
+    return await apiService.getFavoritos();
   }
 );
 
 export const toggleFavorito = createAsyncThunk(
   'cursos/toggleFavorito',
   async (cursoId: string) => {
-    const response = await fetch('/api/favoritos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ cursoId }),
-    });
-    if (!response.ok) {
-      throw new Error('Erro ao alterar favorito');
-    }
-    return response.json();
+    return await apiService.toggleFavorito(cursoId);
   }
 );
 

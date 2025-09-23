@@ -1,68 +1,40 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User, UsuarioCurso, Anotacao, UserState } from '../../types';
+import { apiService } from '../../services/api';
 
 // Async thunks
 export const fetchUserProfile = createAsyncThunk(
   'user/fetchUserProfile',
   async () => {
-    const response = await fetch('/api/auth/me');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar perfil do usuário');
-    }
-    return response.json();
+    return await apiService.getUserProfile();
   }
 );
 
 export const fetchMeusCursos = createAsyncThunk(
   'user/fetchMeusCursos',
   async () => {
-    const response = await fetch('/api/usuarios/meus-cursos');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar meus cursos');
-    }
-    return response.json();
+    return await apiService.getMeusCursos();
   }
 );
 
 export const fetchMinhasAnotacoes = createAsyncThunk(
   'user/fetchMinhasAnotacoes',
   async () => {
-    const response = await fetch('/api/anotacoes');
-    if (!response.ok) {
-      throw new Error('Erro ao buscar anotações');
-    }
-    return response.json();
+    return await apiService.getAnotacoes();
   }
 );
 
 export const loginUser = createAsyncThunk(
   'user/loginUser',
   async (credentials: { email: string; password: string }) => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao fazer login');
-    }
-    return response.json();
+    return await apiService.login(credentials);
   }
 );
 
 export const logoutUser = createAsyncThunk(
   'user/logoutUser',
   async () => {
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      throw new Error('Erro ao fazer logout');
-    }
-    return response.json();
+    return await apiService.logout();
   }
 );
 
