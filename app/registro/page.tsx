@@ -667,7 +667,7 @@ export default function RegistroPage() {
                     <div className="max-h-[200px] overflow-y-auto">
                       {paisesFiltrados.length > 0 ? (
                         paisesFiltrados.map((pais) => (
-                          <SelectItem key={pais.codigo} value={pais.codigo}>
+                          <SelectItem key={`${pais.codigo}-${pais.nome}`} value={pais.codigo}>
                             <div className="flex items-center gap-2">
                               <span>{pais.bandeira}</span>
                               <span className="text-sm">{pais.codigo}</span>
