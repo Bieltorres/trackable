@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 export interface MenuItem {
   label: string;
   href: string;
-  icon?: React.ElementType; // ex: Home, BookOpen (lucide icons)
+  icon?: React.ElementType; 
   active?: boolean;
   isAdmin?: boolean;
 }
