@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import jwt from 'jsonwebtoken';
 
 export async function GET(
   request: NextRequest,
@@ -7,6 +8,41 @@ export async function GET(
 ) {
   try {
     const { id } = params;
+
+    // Verificar token de autenticação
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json(
+        { error: "Token de autenticação não encontrado" },
+        { status: 401 }
+      );
+    }
+
+    let userId: string;
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      userId = decoded.sub;
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Token inválido" },
+        { status: 401 }
+      );
+    }
+
+    // Verificar se o usuário tem acesso ao curso
+    const usuarioCurso = await prisma.usuarioCurso.findFirst({
+      where: {
+        usuarioId: userId,
+        cursoId: id,
+      },
+    });
+
+    if (!usuarioCurso) {
+      return NextResponse.json(
+        { error: "Você não tem acesso a este curso" },
+        { status: 403 }
+      );
+    }
 
     const curso = await prisma.curso.findUnique({
       where: { id },
@@ -29,6 +65,9 @@ export async function GET(
           include: {
             aulas: {
               orderBy: { ordem: 'asc' },
+              include: {
+                arquivos: true,
+              },
             },
           },
           orderBy: { ordem: 'asc' },
@@ -80,6 +119,7 @@ export async function GET(
         mediaAvaliacoes: Math.round(mediaAvaliacoes * 10) / 10,
         avaliacoesRecentes,
       },
+      usuarioCurso,
     });
   } catch (error) {
     console.error('Erro ao buscar curso:', error);
