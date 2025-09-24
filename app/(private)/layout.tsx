@@ -1,7 +1,7 @@
 // app/(private)/layout.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Providers } from "../providers";
 import Sidebar from "@/components/layout/Sidebar";
@@ -16,9 +16,15 @@ export default function PrivateLayout({
   children: React.ReactNode;
 }) {
   const { user } = useAppSelector((state) => state.user);
-  const isAdmin = user?.role === "admin";
+  const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdmin = mounted ? user?.role === "admin" : false;
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
@@ -31,6 +37,28 @@ export default function PrivateLayout({
 
   const currentMenuItem = menuItems.find(item => item.href === pathname);
   const pageTitle = currentMenuItem?.label || "Área de Membros";
+
+  // Evita problemas de hidratação mostrando um loading inicial
+  if (!mounted) {
+    return (
+      <html lang="pt-BR">
+        <body>
+          <Providers>
+            <div className="min-h-screen bg-gray-50">
+              <div className="animate-pulse">
+                <div className="h-16 bg-white border-b"></div>
+                <div className="p-6">
+                  <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+                  <div className="h-32 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+            <Toaster />
+          </Providers>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="pt-BR">
