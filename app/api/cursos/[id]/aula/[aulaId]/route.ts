@@ -4,10 +4,10 @@ import jwt from "jsonwebtoken";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; aulaId: string } }
+  { params }: { params: Promise<{ id: string; aulaId: string }> }
 ) {
   try {
-    const { id: cursoId, aulaId } = params;
+    const { id: cursoId, aulaId } = await params;
 
     // Verificar token de autenticação
     const token = req.cookies.get("token")?.value;
@@ -53,7 +53,6 @@ export async function GET(
         },
       },
       include: {
-        arquivos: true,
         modulo: {
           include: {
             curso: {

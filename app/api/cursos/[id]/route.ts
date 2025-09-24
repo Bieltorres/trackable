@@ -4,10 +4,10 @@ import jwt from 'jsonwebtoken';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Verificar token de autenticação
     const token = request.cookies.get("token")?.value;
@@ -65,9 +65,6 @@ export async function GET(
           include: {
             aulas: {
               orderBy: { ordem: 'asc' },
-              include: {
-                arquivos: true,
-              },
             },
           },
           orderBy: { ordem: 'asc' },
