@@ -77,6 +77,29 @@ export default function ProgressPage() {
     return Math.floor((totalAulas * progresso) / 100);
   };
 
+  // Função para obter a próxima aula baseada no progresso
+  const getProximaAula = (curso: any, progresso: number) => {
+    if (!curso.modulos || curso.modulos.length === 0) return null;
+    
+    const totalAulas = getTotalAulas(curso);
+    const aulasConcluidas = Math.floor((totalAulas * progresso) / 100);
+    
+    let aulaAtual = 0;
+    for (const modulo of curso.modulos) {
+      if (!modulo.aulas) continue;
+      
+      for (const aula of modulo.aulas) {
+        if (aulaAtual === aulasConcluidas) {
+          return aula.id;
+        }
+        aulaAtual++;
+      }
+    }
+    
+    // Se chegou aqui, retorna a primeira aula do primeiro módulo
+    return curso.modulos[0]?.aulas?.[0]?.id || null;
+  };
+
   if (loading) {
     return (
       <div className="p-6">
@@ -271,7 +294,11 @@ export default function ProgressPage() {
                     {/* Ações */}
                     <div className="flex gap-2 pt-2">
                       <Button asChild className="flex-1" size="sm">
-                        <Link href={`/curso/${uc.curso.id}`}>
+                        <Link href={
+                          uc.status === "nao-iniciado" 
+                            ? `/curso/${uc.curso.id}` 
+                            : `/curso/${uc.curso.id}/${getProximaAula(uc.curso, uc.progresso || 0) || ''}`
+                        }>
                           {uc.status === "nao-iniciado" ? "Iniciar Curso" : "Continuar"}
                         </Link>
                       </Button>
