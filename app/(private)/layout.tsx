@@ -8,7 +8,14 @@ import Sidebar from "@/components/layout/Sidebar";
 import { HeaderMain } from "@/components/layout/HeaderMain";
 import { Toaster } from "@/components/ui/toaster";
 import { useAppSelector } from "@/store/hooks";
-import { Home, BarChart3, FileText, MessageCircle, Shield, User } from "lucide-react";
+import {
+  Home,
+  BarChart3,
+  FileText,
+  MessageCircle,
+  Shield,
+  User,
+} from "lucide-react";
 
 export default function PrivateLayout({
   children,
@@ -35,57 +42,49 @@ export default function PrivateLayout({
     { icon: User, label: "Configurações", href: "/perfil" },
   ];
 
-  const currentMenuItem = menuItems.find(item => item.href === pathname);
+  const currentMenuItem = menuItems.find((item) => item.href === pathname);
   const pageTitle = currentMenuItem?.label || "Área de Membros";
 
   // Evita problemas de hidratação mostrando um loading inicial
   if (!mounted) {
     return (
-      <html lang="pt-BR">
-        <body>
-          <Providers>
-            <div className="min-h-screen bg-gray-50">
-              <div className="animate-pulse">
-                <div className="h-16 bg-white border-b"></div>
-                <div className="p-6">
-                  <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                  <div className="h-32 bg-gray-200 rounded"></div>
-                </div>
-              </div>
+      <Providers>
+        <div className="min-h-screen bg-gray-50">
+          <div className="animate-pulse">
+            <div className="h-16 bg-white border-b"></div>
+            <div className="p-6">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-32 bg-gray-200 rounded"></div>
             </div>
-            <Toaster />
-          </Providers>
-        </body>
-      </html>
+          </div>
+        </div>
+        <Toaster />
+      </Providers>
     );
   }
 
   return (
-    <html lang="pt-BR">
-      <body>
-        <Providers>
-          <Sidebar
-            open={sidebarOpen}
-            onClose={() => setSidebarOpen(false)}
-            menuItems={menuItems}
-          />
-          {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
+    <Providers>
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        menuItems={menuItems}
+      />
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-          <HeaderMain
-            title={pageTitle}
-            isAdmin={isAdmin}
-            onSidebarToggle={() => setSidebarOpen(true)}
-          />
+      <HeaderMain
+        title={pageTitle}
+        isAdmin={isAdmin}
+        onSidebarToggle={() => setSidebarOpen(true)}
+      />
 
-          <main className="p-6">{children}</main>
-          <Toaster />
-        </Providers>
-      </body>
-    </html>
+      <main className="p-6">{children}</main>
+      <Toaster />
+    </Providers>
   );
 }
