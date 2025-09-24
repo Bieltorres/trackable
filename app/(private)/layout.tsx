@@ -16,6 +16,49 @@ import {
   Shield,
   User,
 } from "lucide-react";
+import React from "react";
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h2 className="text-red-800 font-semibold mb-2">Algo deu errado</h2>
+            <p className="text-red-600">
+              Ocorreu um erro inesperado. Tente recarregar a página.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Recarregar página
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export default function PrivateLayout({
   children,
@@ -83,7 +126,11 @@ export default function PrivateLayout({
         onSidebarToggle={() => setSidebarOpen(true)}
       />
 
-      <main className="p-6">{children}</main>
+      <main className="p-6">
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </main>
       <Toaster />
     </Providers>
   );
