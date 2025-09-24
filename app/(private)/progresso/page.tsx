@@ -271,7 +271,7 @@ export default function ProgressPage() {
                     {/* Ações */}
                     <div className="flex gap-2 pt-2">
                       <Button asChild className="flex-1" size="sm">
-                        <Link href={`/cursos/${uc.curso.id}`}>
+                        <Link href={`/curso/${uc.curso.id}`}>
                           {uc.status === "nao-iniciado" ? "Iniciar Curso" : "Continuar"}
                         </Link>
                       </Button>
