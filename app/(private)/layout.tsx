@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Providers } from "../providers";
 import Sidebar from "@/components/layout/Sidebar";
 import { HeaderMain } from "@/components/layout/HeaderMain";
@@ -17,6 +18,7 @@ export default function PrivateLayout({
   const { user } = useAppSelector((state) => state.user);
   const isAdmin = user?.role === "admin";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
@@ -25,6 +27,10 @@ export default function PrivateLayout({
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },
     { icon: Shield, label: "Admin Config", href: "#", isAdmin: true },
   ];
+
+  // Encontra o menu item correspondente à rota atual
+  const currentMenuItem = menuItems.find(item => item.href === pathname);
+  const pageTitle = currentMenuItem?.label || "Área de Membros";
 
   return (
     <html lang="pt-BR">
@@ -43,7 +49,7 @@ export default function PrivateLayout({
           )}
 
           <HeaderMain
-            title="Área de Membros"
+            title={pageTitle}
             isAdmin={isAdmin}
             onSidebarToggle={() => setSidebarOpen(true)}
           />
