@@ -8,7 +8,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import { HeaderMain } from "@/components/layout/HeaderMain";
 import { Toaster } from "@/components/ui/toaster";
 import { useAppSelector } from "@/store/hooks";
-import { Home, BarChart3, FileText, MessageCircle, Shield } from "lucide-react";
+import { Home, BarChart3, FileText, MessageCircle, Shield, User } from "lucide-react";
 
 export default function PrivateLayout({
   children,
@@ -26,9 +26,9 @@ export default function PrivateLayout({
     { icon: FileText, label: "Anotações", href: "/anotacoes" },
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },
     { icon: Shield, label: "Admin Config", href: "#", isAdmin: true },
+    { icon: User, label: "Configurações", href: "/perfil" },
   ];
 
-  // Encontra o menu item correspondente à rota atual
   const currentMenuItem = menuItems.find(item => item.href === pathname);
   const pageTitle = currentMenuItem?.label || "Área de Membros";
 
