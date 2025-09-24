@@ -50,10 +50,45 @@ export default function PerfilPage() {
     );
   }
 
-  const handleInfoSubmit = (e: React.FormEvent) => {
+  const handleInfoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você implementaria a lógica para salvar as informações
-    console.log("Salvando informações:", { name, email });
+    
+    try {
+      const response = await fetch("/api/auth/update-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Sucesso",
+          description: "Informações atualizadas com sucesso!",
+        });
+        
+        // Aqui você poderia atualizar o estado global do usuário se necessário
+        // dispatch(updateUser(data.user));
+      } else {
+        toast({
+          title: "Erro",
+          description: data.error || "Erro ao atualizar informações",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar informações:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar informações",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSecuritySubmit = async (e: React.FormEvent) => {
