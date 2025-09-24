@@ -1,6 +1,7 @@
 {
   "/dashboard/page": "app/dashboard/page.js",
+  "/recuperar-senha/page": "app/recuperar-senha/page.js",
   "/login/page": "app/login/page.js",
-  "/curso/[id]/aula/[aulaId]/page": "app/curso/[id]/aula/[aulaId]/page.js",
-  "/registro/page": "app/registro/page.js"
+  "/registro/page": "app/registro/page.js",
+  "/anotacoes/page": "app/anotacoes/page.js"
 }

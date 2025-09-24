@@ -17,6 +17,7 @@ interface CategoriesProps {
   categoriaSelecionada: string | null;
   onCategoriaSelect: (categoria: string | null) => void;
   loading?: boolean;
+  isAdmin?: boolean;
 }
 
 export function Categories({
@@ -24,6 +25,7 @@ export function Categories({
   categoriaSelecionada,
   onCategoriaSelect,
   loading = false,
+  isAdmin = false,
 }: CategoriesProps) {
   if (loading) {
     return (
@@ -48,10 +50,12 @@ export function Categories({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Categorias</h3>
-        <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Categoria
-        </Button>
+        {isAdmin && ( 
+          <Button variant="outline" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Categoria
+          </Button>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categorias.map((categoria) => (
@@ -65,13 +69,11 @@ export function Categories({
             )}
             onClick={() =>
               onCategoriaSelect(
-                categoriaSelecionada === categoria.nome
-                  ? null
-                  : categoria.nome
+                categoriaSelecionada === categoria.nome ? null : categoria.nome
               )
             }
           >
-            <CardContent className="p-4">
+            <CardContent className="p-4 mt-5">
               <div className="flex items-center justify-between mb-3">
                 <div className={cn("p-2 rounded-lg", categoria.cor)}>
                   <categoria.icon className="h-5 w-5 text-white" />

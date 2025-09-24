@@ -1,20 +1,21 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
-import { Toaster } from '@/components/ui/toaster'
-import { Providers } from './providers'
+import type { Metadata } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "./providers";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
-}
+  title: "v0 App",
+  description: "Created with v0",
+  generator: "v0.dev",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -29,10 +30,10 @@ html {
       </head>
       <body>
         <Providers>
-          {children}
+          <DashboardLayout>{children}</DashboardLayout>
           <Toaster />
         </Providers>
       </body>
     </html>
-  )
+  );
 }

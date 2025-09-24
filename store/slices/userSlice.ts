@@ -1,42 +1,39 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { User, UsuarioCurso, Anotacao, UserState } from '../../types';
-import { apiService } from '../../services/api';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { User, UsuarioCurso, Anotacao, UserState } from "../../types";
+import { apiService } from "../../services/api";
 
 // Async thunks
 export const fetchUserProfile = createAsyncThunk(
-  'user/fetchUserProfile',
+  "user/fetchUserProfile",
   async () => {
     return await apiService.getUserProfile();
   }
 );
 
 export const fetchMeusCursos = createAsyncThunk(
-  'user/fetchMeusCursos',
+  "user/fetchMeusCursos",
   async () => {
     return await apiService.getMeusCursos();
   }
 );
 
 export const fetchMinhasAnotacoes = createAsyncThunk(
-  'user/fetchMinhasAnotacoes',
+  "user/fetchMinhasAnotacoes",
   async () => {
     return await apiService.getAnotacoes();
   }
 );
 
 export const loginUser = createAsyncThunk(
-  'user/loginUser',
+  "user/loginUser",
   async (credentials: { email: string; password: string }) => {
     return await apiService.login(credentials);
   }
 );
 
-export const logoutUser = createAsyncThunk(
-  'user/logoutUser',
-  async () => {
-    return await apiService.logout();
-  }
-);
+export const logoutUser = createAsyncThunk("user/logoutUser", async () => {
+  return await apiService.logout();
+});
 
 const initialState: UserState = {
   user: null,
@@ -48,7 +45,7 @@ const initialState: UserState = {
 };
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
     clearError: (state) => {
@@ -70,17 +67,17 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data || action.payload;
+        state.user = action.payload.data || null;
         state.isAuthenticated = true;
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Erro ao buscar perfil';
+        state.error = action.error.message || "Erro ao buscar perfil";
         state.isAuthenticated = false;
       })
       // Fetch meus cursos
       .addCase(fetchMeusCursos.fulfilled, (state, action) => {
-        state.meusCursos = action.payload.data || action.payload;
+        state.meusCursos = action.payload.data ?? [];
       })
       // Fetch minhas anotações
       .addCase(fetchMinhasAnotacoes.fulfilled, (state, action) => {
@@ -98,7 +95,7 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Erro ao fazer login';
+        state.error = action.error.message || "Erro ao fazer login";
         state.isAuthenticated = false;
       })
       // Logout

@@ -274,32 +274,7 @@ export default function AnotacoesPage() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm border-b border-amber-200 h-16 flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
-          <div className="flex items-center">
-            <Button variant="ghost" size="sm" className="lg:hidden mr-2" onClick={() => setSidebarOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center">
-              <StickyNote className="h-6 w-6 text-amber-600 mr-2" />
-              <h1 className="text-xl font-bold text-gray-900">Minhas Anotações</h1>
-            </div>
-            {isAdmin && (
-              <Badge className="ml-3 bg-orange-100 text-orange-800">
-                <Shield className="h-3 w-3 mr-1" />
-                Admin
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
-          </div>
-        </header>
-
+      <div className="flex-1 flex flex-col overflow-hidden">        
         {/* Main Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* Header do Caderno */}

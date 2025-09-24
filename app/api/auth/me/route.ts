@@ -1,30 +1,59 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const token = req.headers.get("cookie")?.split("token=")[1]?.split(";")[0];
+    // Lê o cookie de forma segura
+    const token = cookies().get("token")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    // Decodifica usando a mesma chave usada no login
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      sub: string;
+      email: string;
+    };
 
+    // Busca o usuário pelo `sub` (que é o id)
     const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, email: true, name: true },
+      where: { id: decoded.sub },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        birthdate: true,
+        phone: true,
+        userInfo: {
+          select: {
+            bio: true,
+            avatar: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Usuário não encontrado" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ data: user });
   } catch (error) {
-    return NextResponse.json({ error: "Token inválido ou expirado" }, { status: 401 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Token inválido ou expirado" },
+      { status: 401 }
+    );
   }
 }

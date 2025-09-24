@@ -2,15 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { X } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export interface MenuItem {
   label: string;
   href: string;
-  icon?: React.ElementType; 
+  icon?: React.ElementType;
   active?: boolean;
   isAdmin?: boolean;
 }
@@ -35,6 +37,8 @@ export default function Sidebar({
   cursosFavoritos = [],
   onMenuItemClick,
 }: SidebarProps) {
+  const user = useSelector((state: RootState) => state.user.user);
+
   return (
     <aside
       aria-label="Sidebar"
@@ -46,15 +50,18 @@ export default function Sidebar({
     >
       {/* Topo */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700 flex-shrink-0">
-        <div className="flex items-center">
-          {/* Você pode trocar por logo */}
+        <div className="flex items-center gap-5">
+          {/* Você pode trocar por logo */}{" "}
+          <div className="bg-blue-600 text-white p-2 rounded-lg">
+            <BookOpen className="h-5 w-5" />
+          </div>
           <span className="text-lg font-semibold">TrackAble</span>
         </div>
 
         <Button
           variant="ghost"
           size="sm"
-          className="lg:hidden text-white hover:bg-slate-800"
+          className="lg:hidden text-white "
           onClick={onClose}
         >
           <X className="h-5 w-5" />
@@ -73,7 +80,8 @@ export default function Sidebar({
               "text-slate-300 hover:bg-slate-800 hover:text-white hover:shadow-md";
 
             if (item.isAdmin) {
-              // itens administrativos podem disparar uma ação em vez de navegação
+              if (user?.role !== "admin") return null;
+
               return (
                 <button
                   key={item.label}
@@ -95,11 +103,9 @@ export default function Sidebar({
                     />
                   )}
                   {item.label}
-                  {item.isAdmin && (
-                    <Badge className="ml-auto bg-orange-500 text-white text-xs">
-                      ADMIN
-                    </Badge>
-                  )}
+                  <Badge className="ml-auto bg-orange-500 text-white text-xs">
+                    ADMIN
+                  </Badge>
                 </button>
               );
             }
@@ -174,8 +180,8 @@ export default function Sidebar({
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium">João Silva</p>
-              <p className="text-xs text-slate-400">joao@email.com</p>
+              <p className="text-sm font-medium">{user?.name}</p>
+              <p className="text-xs text-slate-400">{user?.email}</p>
             </div>
           </div>
 

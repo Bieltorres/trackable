@@ -1,14 +1,16 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Menu, Shield, LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, Shield, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 interface HeaderProps {
-  title?: string
-  isAdmin?: boolean
-  onSidebarToggle?: () => void
+  title?: string;
+  isAdmin?: boolean;
+  onSidebarToggle?: () => void;
 }
 
 export function HeaderMain({
@@ -16,16 +18,19 @@ export function HeaderMain({
   isAdmin = false,
   onSidebarToggle,
 }: HeaderProps) {
-  const router = useRouter()
+  const router = useRouter();
+  const user = useSelector((state: RootState) => state.user.user);
+
+  if (!user) return null;
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
-      router.push("/login") // redireciona para login
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login"); // redireciona para login
     } catch (error) {
-      console.error("Erro no logout:", error)
+      console.error("Erro no logout:", error);
     }
-  }
+  };
 
   return (
     <header className="bg-white border-b h-16 flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
@@ -44,7 +49,7 @@ export function HeaderMain({
         {isAdmin && (
           <Badge className="ml-3 bg-orange-100 text-orange-800">
             <Shield className="h-3 w-3 mr-1" />
-            Modo Administrador
+            Modo {user.role}
           </Badge>
         )}
       </div>
@@ -56,5 +61,5 @@ export function HeaderMain({
         </Button>
       </div>
     </header>
-  )
+  );
 }

@@ -12,8 +12,8 @@ async function getUserFromToken(request: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    return decoded.id;
+    const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
+    return decoded.sub;
   } catch (error) {
     throw new Error('Token inválido');
   }
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { dataInscricao: 'desc' },
+      orderBy: { dataCompra: 'desc' },
     });
 
     return NextResponse.json({ data: meusCursos });

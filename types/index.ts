@@ -1,11 +1,13 @@
 export interface User {
   id: string;
   email: string;
-  name?: string | null;
-  role: string;
+  name: string;
+  role: "student" | "instructor" | "admin";
   birthdate?: string | null;
   phone?: string | null;
   userInfo?: UserInfo | null;
+  createdAt?: Date; 
+  updatedAt?: Date;
 }
 
 export interface UserInfo {
@@ -31,11 +33,11 @@ export interface Curso {
   titulo: string;
   descricao: string;
   thumbnail?: string | null;
-  nivel: 'iniciante' | 'intermediario' | 'avancado';
+  nivel: "iniciante" | "intermediario" | "avancado";
   preco: number;
   precoOriginal?: number | null;
   desconto?: number | null;
-  status: 'rascunho' | 'publicado' | 'arquivado';
+  status: "rascunho" | "publicado" | "arquivado";
   categoriaId: string;
   instrutorId: string;
   createdAt: Date;
@@ -76,7 +78,7 @@ export interface UsuarioCurso {
   id: string;
   usuarioId: string;
   cursoId: string;
-  status: 'nao-iniciado' | 'em-andamento' | 'concluido';
+  status: "nao-iniciado" | "em-andamento" | "concluido";
   progresso: number;
   dataInscricao: Date;
   dataConclusao?: Date | null;

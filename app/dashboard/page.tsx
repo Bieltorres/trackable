@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Home, BarChart3, FileText, MessageCircle, Shield, Youtube, BarChart, Zap } from "lucide-react";
+import {
+  Youtube,
+  BarChart,
+  Zap,
+} from "lucide-react";
 import { CourseModal } from "@/components/course-modal";
 import { UserSettingsModal } from "@/components/user-settings-modal";
 import { AdminConfigModal } from "@/components/admin-config-modal";
@@ -13,31 +17,38 @@ import { Categories } from "@/components/dashboard/Categories";
 import { Filters } from "@/components/dashboard/Filters";
 import { CoursesTabs } from "@/components/dashboard/CoursesTabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchCursos, fetchFavoritos, toggleFavorito } from "@/store/slices/cursosSlice";
+import {
+  fetchCursos,
+  fetchFavoritos,
+  toggleFavorito,
+} from "@/store/slices/cursosSlice";
 import { fetchUserProfile, fetchMeusCursos } from "@/store/slices/userSlice";
 import { Curso } from "@/types";
 
 const niveis = ["Todos", "iniciante", "intermediario", "avancado"];
 
-const menuItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard", active: true },
-  { icon: BarChart3, label: "Progresso", href: "/progresso" },
-  { icon: FileText, label: "Anotações", href: "/anotacoes" },
-  { icon: MessageCircle, label: "Suporte", href: "/suporte" },
-  { icon: Shield, label: "Admin Config", href: "#", isAdmin: true },
-];
-
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
-  const { cursos, favoritos, loading: cursosLoading } = useAppSelector((state) => state.cursos);
-  const { user, meusCursos, loading: userLoading, isAuthenticated } = useAppSelector((state) => state.user);
+  const {
+    cursos,
+    favoritos,
+    loading: cursosLoading,
+  } = useAppSelector((state) => state.cursos);
+  const {
+    user,
+    meusCursos,
+    loading: userLoading,
+    isAuthenticated,
+  } = useAppSelector((state) => state.user);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [selectedNivel, setSelectedNivel] = useState("Todos");
   const [activeTab, setActiveTab] = useState("todos");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [categoriaPersonalizadaSelecionada, setCategoriaPersonalizadaSelecionada] = useState<string | null>(null);
+  const [
+    categoriaPersonalizadaSelecionada,
+    setCategoriaPersonalizadaSelecionada,
+  ] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Curso | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -55,13 +66,13 @@ export default function DashboardPage() {
     try {
       await dispatch(toggleFavorito(cursoId)).unwrap();
     } catch (error) {
-      console.error('Erro ao alterar favorito:', error);
+      console.error("Erro ao alterar favorito:", error);
     }
   };
 
   const handleCourseClick = (curso: Curso) => {
-    const cursoAdquirido = meusCursos.find(mc => mc.cursoId === curso.id);
-    
+    const cursoAdquirido = meusCursos.find((mc) => mc.cursoId === curso.id);
+
     if (cursoAdquirido) {
       // Se o curso já foi adquirido, redireciona para a página de aulas
       window.location.href = `/curso/${curso.id}/aula/1`;
@@ -79,23 +90,34 @@ export default function DashboardPage() {
   };
 
   // Criar lista de categorias únicas dos cursos
-  const categorias = ["Todos", ...Array.from(new Set(cursos.map(c => c.categoria?.nome).filter(Boolean)))];
+  const categorias = [
+    "Todos",
+    ...Array.from(
+      new Set(cursos.map((c) => c.categoria?.nome).filter(Boolean))
+    ),
+  ];
 
   // Mapear cursos com informações de progresso dos meus cursos
-  const cursosComProgresso = cursos.map(curso => {
-    const meuCurso = meusCursos.find(mc => mc.cursoId === curso.id);
-    const totalAulas = curso.modulos?.reduce((acc, modulo) => acc + (modulo.aulas?.length || 0), 0) || 0;
-    
+  const cursosComProgresso = cursos.map((curso) => {
+    const meuCurso = meusCursos.find((mc) => mc.cursoId === curso.id);
+    const totalAulas =
+      curso.modulos?.reduce(
+        (acc, modulo) => acc + (modulo.aulas?.length || 0),
+        0
+      ) || 0;
+
     return {
       ...curso,
       adquirido: !!meuCurso,
       progresso: meuCurso?.progresso || 0,
-      status: meuCurso?.status || 'disponivel',
+      status: meuCurso?.status || "disponivel",
       aulasTotal: totalAulas,
-      aulasAssistidas: Math.floor((meuCurso?.progresso || 0) * totalAulas / 100),
+      aulasAssistidas: Math.floor(
+        ((meuCurso?.progresso || 0) * totalAulas) / 100
+      ),
       duracaoTotal: "0h 0min", // TODO: calcular duração total das aulas
-      categoria: curso.categoria?.nome || 'Sem categoria',
-      instrutor: curso.instrutor?.name || 'Instrutor',
+      categoria: curso.categoria?.nome || "Sem categoria",
+      instrutor: curso.instrutor?.name || "Instrutor",
       avaliacao: curso.mediaAvaliacoes || 0,
     };
   });
@@ -111,16 +133,19 @@ export default function DashboardPage() {
 
     let matchTab = true;
     if (activeTab === "meus-cursos") matchTab = curso.adquirido;
-    if (activeTab === "em-andamento") matchTab = curso.status === "em-andamento";
+    if (activeTab === "em-andamento")
+      matchTab = curso.status === "em-andamento";
     if (activeTab === "concluidos") matchTab = curso.status === "concluido";
-    if (activeTab === "disponivel") matchTab = curso.status === "disponivel" || !curso.adquirido;
-    if (activeTab === "nao-iniciados") matchTab = curso.status === "nao-iniciado";
+    if (activeTab === "disponivel")
+      matchTab = curso.status === "disponivel" || !curso.adquirido;
+    if (activeTab === "nao-iniciados")
+      matchTab = curso.status === "nao-iniciado";
     if (activeTab === "todos") matchTab = true;
 
     return matchSearch && matchCategory && matchNivel && matchTab;
   });
 
-  const cursosFavoritosIds = favoritos.map(f => f.cursoId);
+  const cursosFavoritosIds = favoritos.map((f) => f.cursoId);
 
   const estatisticas = {
     cursosAtivos: meusCursos.filter((c) => c.status === "em-andamento").length,
@@ -136,53 +161,36 @@ export default function DashboardPage() {
       icon: Youtube,
       cor: "bg-red-500",
       descricao: "Conteúdos exclusivos e materiais complementares",
-      cursos: cursos.filter(c => c.categoria?.nome === "Marketing").length,
+      cursos: cursos.filter((c) => c.categoria?.nome === "Marketing").length,
     },
     {
       nome: "Trackeamento",
       icon: BarChart,
       cor: "bg-blue-500",
       descricao: "Ferramentas e estratégias de análise",
-      cursos: cursos.filter(c => c.categoria?.nome === "Analytics").length,
+      cursos: cursos.filter((c) => c.categoria?.nome === "Analytics").length,
     },
     {
       nome: "Automações",
       icon: Zap,
       cor: "bg-yellow-500",
       descricao: "Sistemas automatizados para otimizar processos",
-      cursos: cursos.filter(c => c.categoria?.nome === "Automação").length,
+      cursos: cursos.filter((c) => c.categoria?.nome === "Automação").length,
     },
   ];
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
 
+  useEffect(() => {
+    console.log("meusCursos do Redux:", meusCursos);
+  }, [meusCursos]);
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
 
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        menuItems={menuItems}
-      />
-
-      {/* Overlay para mobile - apenas à direita do sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <HeaderMain
-          title="Dashboard"
-          isAdmin={true}
-          onSidebarToggle={() => setSidebarOpen(true)}
-        />
 
         {/* Main Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
@@ -210,6 +218,7 @@ export default function DashboardPage() {
             categoriaSelecionada={categoriaPersonalizadaSelecionada}
             onCategoriaSelect={setCategoriaPersonalizadaSelecionada}
             loading={cursosLoading}
+            isAdmin={user?.role === "admin"}
           />
 
           {/* Filtros e Busca */}
