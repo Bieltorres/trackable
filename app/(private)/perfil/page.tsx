@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/store/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PerfilPage() {
   const user = useAppSelector((state) => state.user.user);
   const [mounted, setMounted] = useState(false);
+  const { toast } = useToast();
   
   // Estados para o formulário de informações
   const [name, setName] = useState("");
@@ -77,15 +79,24 @@ export default function PerfilPage() {
         setNewPassword("");
         setConfirmPassword("");
         
-        // Aqui você pode adicionar uma notificação de sucesso
-        alert("Senha alterada com sucesso!");
+        toast({
+          title: "Sucesso",
+          description: "Senha alterada com sucesso!",
+        });
       } else {
-        // Aqui você pode adicionar uma notificação de erro
-        alert(data.error || "Erro ao alterar senha");
+        toast({
+          title: "Erro",
+          description: data.error || "Erro ao alterar senha",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Erro ao alterar senha:", error);
-      alert("Erro ao alterar senha");
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar senha",
+        variant: "destructive",
+      });
     }
   };
 

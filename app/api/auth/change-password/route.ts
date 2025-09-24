@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-      userId = decoded.userId;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      userId = decoded.sub;
     } catch (error) {
       return NextResponse.json(
         { error: "Token inválido" },
