@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -35,147 +36,81 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { UserSettingsModal } from "@/components/user-settings-modal"
 import { AdminConfigModal } from "@/components/admin-config-modal"
-
-// Dados simulados do curso e aulas
-const cursoData = {
-  id: 1,
-  titulo: "Marketing Digital Completo",
-  instrutor: "João Silva",
-  descricao: "Aprenda estratégias avançadas de marketing digital do zero ao avançado",
-  modulos: [
-    {
-      id: 1,
-      titulo: "Fundamentos do Marketing Digital",
-      aulas: [
-        {
-          id: 1,
-          titulo: "Introdução ao Marketing Digital",
-          duracao: "15:30",
-          concluida: true,
-          videoUrl: "/placeholder-video.mp4",
-          descricao:
-            "Nesta aula você aprenderá os conceitos fundamentais do marketing digital e como ele pode transformar seu negócio.",
-        },
-        {
-          id: 2,
-          titulo: "Definindo seu Público-Alvo",
-          duracao: "22:45",
-          concluida: true,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Aprenda a identificar e definir seu público-alvo ideal para suas campanhas de marketing.",
-        },
-        {
-          id: 3,
-          titulo: "Criando Personas",
-          duracao: "18:20",
-          concluida: false,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Como criar personas detalhadas que representem seus clientes ideais.",
-        },
-      ],
-    },
-    {
-      id: 2,
-      titulo: "Estratégias de Conteúdo",
-      aulas: [
-        {
-          id: 4,
-          titulo: "Planejamento de Conteúdo",
-          duracao: "25:10",
-          concluida: false,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Estratégias para planejar e organizar seu calendário de conteúdo.",
-        },
-        {
-          id: 5,
-          titulo: "Criação de Conteúdo Viral",
-          duracao: "30:15",
-          concluida: false,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Técnicas para criar conteúdo que engaja e se espalha naturalmente.",
-        },
-      ],
-    },
-    {
-      id: 3,
-      titulo: "Métricas e Análise",
-      aulas: [
-        {
-          id: 6,
-          titulo: "Google Analytics Essencial",
-          duracao: "35:40",
-          concluida: false,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Como configurar e usar o Google Analytics para acompanhar seus resultados.",
-        },
-        {
-          id: 7,
-          titulo: "KPIs e Métricas Importantes",
-          duracao: "28:30",
-          concluida: false,
-          videoUrl: "/placeholder-video.mp4",
-          descricao: "Quais métricas realmente importam e como interpretá-las.",
-        },
-      ],
-    },
-  ],
-}
-
-// Dados da aula atual (simulado)
-const aulaAtual = {
-  id: 1,
-  titulo: "Introdução ao Marketing Digital",
-  descricao:
-    "Nesta aula você aprenderá os conceitos fundamentais do marketing digital e como ele pode transformar seu negócio.",
-  videoUrl: "/placeholder-video.mp4",
-  duracao: "15:30",
-  materiais: [
-    {
-      id: 1,
-      nome: "Slides da Aula.pdf",
-      tipo: "pdf",
-      tamanho: "2.5 MB",
-      url: "/placeholder.pdf",
-    },
-    {
-      id: 2,
-      nome: "Checklist Marketing.xlsx",
-      tipo: "excel",
-      tamanho: "1.2 MB",
-      url: "/placeholder.xlsx",
-    },
-    {
-      id: 3,
-      nome: "Template Personas.docx",
-      tipo: "word",
-      tamanho: "800 KB",
-      url: "/placeholder.docx",
-    },
-  ],
-}
-
-// Simular usuário admin
-const isAdmin = true
-
-const menuItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
-  { icon: BarChart3, label: "Progresso", href: "/progresso", active: false },
-  { icon: FileText, label: "Anotações", href: "/anotacoes", active: false },
-  { icon: MessageCircle, label: "Suporte", href: "/suporte", active: false },
-  ...(isAdmin ? [{ icon: Shield, label: "Admin Config", href: "#", active: false, isAdmin: true }] : []),
-]
+import { useAppSelector } from "@/store/hooks"
+import { useToast } from "@/hooks/use-toast"
 
 export default function AulaPage() {
+  const params = useParams()
+  const { user } = useAppSelector((state) => state.user)
+  const { toast } = useToast()
+  const isAdmin = user?.role === "admin"
+  
+  // Estados para dados da API
+  const [cursoData, setCursoData] = useState<any>(null)
+  const [aulaAtual, setAulaAtual] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  
+  // Estados existentes
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [modulosAbertos, setModulosAbertos] = useState<number[]>([1])
+  const [modulosAbertos, setModulosAbertos] = useState<number[]>([])
   const [isAdminMode, setIsAdminMode] = useState(false)
   const [editandoConteudo, setEditandoConteudo] = useState(false)
-  const [tituloAula, setTituloAula] = useState(aulaAtual.titulo)
-  const [descricaoAula, setDescricaoAula] = useState(aulaAtual.descricao)
+  const [tituloAula, setTituloAula] = useState("")
+  const [descricaoAula, setDescricaoAula] = useState("")
   const [novoArquivo, setNovoArquivo] = useState({ nome: "", tipo: "", tamanho: "" })
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false)
+
+  const menuItems = [
+    { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
+    { icon: BarChart3, label: "Progresso", href: "/progresso", active: false },
+    { icon: FileText, label: "Anotações", href: "/anotacoes", active: false },
+    { icon: MessageCircle, label: "Suporte", href: "/suporte", active: false },
+    ...(isAdmin ? [{ icon: Shield, label: "Admin Config", href: "#", active: false, isAdmin: true }] : []),
+  ]
+
+  // Buscar dados da aula
+  useEffect(() => {
+    const fetchAulaData = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/cursos/${params.id}/aula/${params.aulaId}`)
+        
+        if (!response.ok) {
+          throw new Error("Erro ao carregar aula")
+        }
+        
+        const data = await response.json()
+        setCursoData(data.curso)
+        setAulaAtual(data.aula)
+        setTituloAula(data.aula.titulo)
+        setDescricaoAula(data.aula.descricao || "")
+        
+        // Abrir o módulo da aula atual por padrão
+        const moduloAtual = data.curso.modulos.find((m: any) => 
+          m.aulas.some((a: any) => a.id === data.aula.id)
+        )
+        if (moduloAtual) {
+          setModulosAbertos([moduloAtual.id])
+        }
+        
+      } catch (error) {
+        console.error("Erro ao carregar aula:", error)
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar dados da aula",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (params.id && params.aulaId) {
+      fetchAulaData()
+    }
+  }, [params.id, params.aulaId, toast])
 
   const handleMenuClick = (item: any) => {
     if (item.isAdmin) {
@@ -187,33 +122,93 @@ export default function AulaPage() {
     setModulosAbertos((prev) => (prev.includes(moduloId) ? prev.filter((id) => id !== moduloId) : [...prev, moduloId]))
   }
 
-  const handleSalvarConteudo = () => {
-    // Aqui salvaria as alterações no backend
-    console.log("Salvando:", { titulo: tituloAula, descricao: descricaoAula })
-    setEditandoConteudo(false)
-    alert("Conteúdo salvo com sucesso!")
+  const handleSalvarConteudo = async () => {
+    try {
+      // TODO: Implementar API para salvar alterações da aula
+      console.log("Salvando:", { titulo: tituloAula, descricao: descricaoAula })
+      setEditandoConteudo(false)
+      toast({
+        title: "Sucesso",
+        description: "Conteúdo salvo com sucesso!",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar conteúdo",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleAdicionarArquivo = () => {
+  const handleAdicionarArquivo = async () => {
     if (novoArquivo.nome) {
-      // Aqui adicionaria o arquivo no backend
-      console.log("Adicionando arquivo:", novoArquivo)
-      setNovoArquivo({ nome: "", tipo: "", tamanho: "" })
-      alert("Arquivo adicionado com sucesso!")
+      try {
+        // TODO: Implementar API para adicionar arquivo
+        console.log("Adicionando arquivo:", novoArquivo)
+        setNovoArquivo({ nome: "", tipo: "", tamanho: "" })
+        toast({
+          title: "Sucesso",
+          description: "Arquivo adicionado com sucesso!",
+        })
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: "Erro ao adicionar arquivo",
+          variant: "destructive",
+        })
+      }
     }
   }
 
   const getFileIcon = (tipo: string) => {
-    switch (tipo) {
+    switch (tipo.toLowerCase()) {
       case "pdf":
         return "📄"
       case "excel":
+      case "xlsx":
+      case "xls":
         return "📊"
       case "word":
+      case "docx":
+      case "doc":
         return "📝"
+      case "video":
+      case "mp4":
+      case "avi":
+        return "🎥"
+      case "image":
+      case "jpg":
+      case "png":
+      case "gif":
+        return "🖼️"
       default:
         return "📁"
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!cursoData || !aulaAtual) {
+    return (
+      <div className="h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Aula não encontrada</h2>
+          <p className="text-gray-600 mb-4">A aula que você está procurando não existe ou você não tem acesso a ela.</p>
+          <Button asChild>
+            <Link href="/dashboard">Voltar ao Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -234,14 +229,23 @@ export default function AulaPage() {
             {/* Video Player */}
             <div className="bg-black relative">
               <div className="aspect-video">
-                <video
-                  className="w-full h-full object-cover"
-                  controls
-                  poster="/placeholder.svg?height=400&width=800&text=Video+Player"
-                >
-                  <source src={aulaAtual.videoUrl} type="video/mp4" />
-                  Seu navegador não suporta o elemento de vídeo.
-                </video>
+                {aulaAtual.videoUrl ? (
+                  <video
+                    className="w-full h-full object-cover"
+                    controls
+                    poster="/placeholder.svg?height=400&width=800&text=Video+Player"
+                  >
+                    <source src={aulaAtual.videoUrl} type="video/mp4" />
+                    Seu navegador não suporta o elemento de vídeo.
+                  </video>
+                ) : (
+                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <PlayCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p>Vídeo não disponível</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -312,24 +316,30 @@ export default function AulaPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {aulaAtual.materiais.map((material) => (
-                      <div
-                        key={material.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <span className="text-2xl mr-3">{getFileIcon(material.tipo)}</span>
-                          <div>
-                            <p className="font-medium text-gray-900">{material.nome}</p>
-                            <p className="text-sm text-gray-500">{material.tamanho}</p>
+                    {aulaAtual.arquivos && aulaAtual.arquivos.length > 0 ? (
+                      aulaAtual.arquivos.map((arquivo: any) => (
+                        <div
+                          key={arquivo.id}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <span className="text-2xl mr-3">{getFileIcon(arquivo.tipo)}</span>
+                            <div>
+                              <p className="font-medium text-gray-900">{arquivo.nome}</p>
+                              <p className="text-sm text-gray-500">{arquivo.tamanho || "Tamanho não informado"}</p>
+                            </div>
                           </div>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={arquivo.url} download target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4 mr-2" />
+                              Baixar
+                            </a>
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Baixar
-                        </Button>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-4">Nenhum material disponível para esta aula.</p>
+                    )}
 
                     {/* Formulário para adicionar novo arquivo (Admin) */}
                     {isAdminMode && (
@@ -370,7 +380,7 @@ export default function AulaPage() {
           <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <h2 className="font-semibold text-gray-900">{cursoData.titulo}</h2>
-              <p className="text-sm text-gray-500">por {cursoData.instrutor}</p>
+              <p className="text-sm text-gray-500">por {cursoData.instrutor?.name || "Instrutor não informado"}</p>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -395,31 +405,29 @@ export default function AulaPage() {
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="bg-gray-50">
-                      {modulo.aulas.map((aula) => (
-                        <div
+                      {modulo.aulas.map((aula: any) => (
+                        <Link
                           key={aula.id}
+                          href={`/curso/${cursoData.id}/aula/${aula.id}`}
                           className={cn(
-                            "p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors",
-                            aula.id === 1 && "bg-blue-50 border-l-4 border-l-blue-500",
+                            "block p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors",
+                            aula.id === aulaAtual.id && "bg-blue-50 border-l-4 border-l-blue-500",
                           )}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center flex-1">
-                              {aula.concluida ? (
-                                <CheckCircle className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
-                              ) : (
-                                <PlayCircle className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
-                              )}
+                              {/* TODO: Implementar lógica de aula concluída */}
+                              <PlayCircle className="h-4 w-4 text-gray-400 mr-3 flex-shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm text-gray-900 truncate">{aula.titulo}</p>
                                 <div className="flex items-center text-xs text-gray-500 mt-1">
                                   <Clock className="h-3 w-3 mr-1" />
-                                  <span>{aula.duracao}</span>
+                                  <span>{aula.duracao || "Duração não informada"}</span>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </CollapsibleContent>
