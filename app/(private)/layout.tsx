@@ -20,16 +20,23 @@ import React from "react";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
+  { children: React.ReactNode; pathname: string },
+  { hasError: boolean; lastPathname: string }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: { children: React.ReactNode; pathname: string }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, lastPathname: props.pathname };
   }
 
   static getDerivedStateFromError(error: Error) {
     return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: { children: React.ReactNode; pathname: string }) {
+    // Reset error state when pathname changes
+    if (prevProps.pathname !== this.props.pathname && this.state.hasError) {
+      this.setState({ hasError: false, lastPathname: this.props.pathname });
+    }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -45,6 +52,12 @@ class ErrorBoundary extends React.Component<
             <p className="text-red-600">
               Ocorreu um erro inesperado. Tente recarregar a página.
             </p>
+            <button
+              onClick={() => this.setState({ hasError: false })}
+              className="mt-3 mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Tentar novamente
+            </button>
             <button
               onClick={() => window.location.reload()}
               className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -108,30 +121,30 @@ export default function PrivateLayout({
 
   return (
     <Providers>
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        menuItems={menuItems}
-      />
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+      <ErrorBoundary pathname={pathname}>
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          menuItems={menuItems}
         />
-      )}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-      <HeaderMain
-        title={pageTitle}
-        isAdmin={isAdmin}
-        onSidebarToggle={() => setSidebarOpen(true)}
-      />
+        <HeaderMain
+          title={pageTitle}
+          isAdmin={isAdmin}
+          onSidebarToggle={() => setSidebarOpen(true)}
+        />
 
-      <main className="p-6">
-        <ErrorBoundary>
+        <main className="p-6">
           {children}
-        </ErrorBoundary>
-      </main>
-      <Toaster />
+        </main>
+        <Toaster />
+      </ErrorBoundary>
     </Providers>
   );
 }
