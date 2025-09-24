@@ -89,7 +89,6 @@ export default function PerfilPage() {
                 />
                 <Input 
                   value={email} 
-                  onChange={(e) => setEmail(e.target.value)}
                   disabled 
                 />
                 <Button type="submit" disabled={!isInfoFormValid}>
