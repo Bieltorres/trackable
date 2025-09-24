@@ -18,61 +18,6 @@ import {
 } from "lucide-react";
 import React from "react";
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode; pathname: string },
-  { hasError: boolean; lastPathname: string }
-> {
-  constructor(props: { children: React.ReactNode; pathname: string }) {
-    super(props);
-    this.state = { hasError: false, lastPathname: props.pathname };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true };
-  }
-
-  componentDidUpdate(prevProps: { children: React.ReactNode; pathname: string }) {
-    // Reset error state when pathname changes
-    if (prevProps.pathname !== this.props.pathname && this.state.hasError) {
-      this.setState({ hasError: false, lastPathname: this.props.pathname });
-    }
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h2 className="text-red-800 font-semibold mb-2">Algo deu errado</h2>
-            <p className="text-red-600">
-              Ocorreu um erro inesperado. Tente recarregar a página.
-            </p>
-            <button
-              onClick={() => this.setState({ hasError: false })}
-              className="mt-3 mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Tentar novamente
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Recarregar página
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 export default function PrivateLayout({
   children,
 }: {
@@ -81,10 +26,34 @@ export default function PrivateLayout({
   const { user } = useAppSelector((state) => state.user);
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [layoutError, setLayoutError] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
+    // Reset any layout errors when pathname changes
+    setLayoutError(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    // Global error handler
+    const handleError = (event: ErrorEvent) => {
+      console.error("Global error:", event.error);
+      setLayoutError(true);
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("Unhandled promise rejection:", event.reason);
+      setLayoutError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, []);
 
   const isAdmin = mounted ? user?.role === "admin" : false;
@@ -121,30 +90,49 @@ export default function PrivateLayout({
 
   return (
     <Providers>
-      <ErrorBoundary pathname={pathname}>
-        <Sidebar
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          menuItems={menuItems}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        menuItems={menuItems}
+      />
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
         />
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
+      )}
+
+      <HeaderMain
+        title={pageTitle}
+        isAdmin={isAdmin}
+        onSidebarToggle={() => setSidebarOpen(true)}
+      />
+
+      <main className="p-6">
+        {layoutError ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h2 className="text-red-800 font-semibold mb-2">Algo deu errado</h2>
+            <p className="text-red-600">
+              Ocorreu um erro inesperado. O header foi mantido para facilitar a navegação.
+            </p>
+            <button
+              onClick={() => setLayoutError(false)}
+              className="mt-3 mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Tentar novamente
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Recarregar página
+            </button>
+          </div>
+        ) : (
+          children
         )}
-
-        <HeaderMain
-          title={pageTitle}
-          isAdmin={isAdmin}
-          onSidebarToggle={() => setSidebarOpen(true)}
-        />
-
-        <main className="p-6">
-          {children}
-        </main>
-        <Toaster />
-      </ErrorBoundary>
+      </main>
+      <Toaster />
     </Providers>
   );
 }
