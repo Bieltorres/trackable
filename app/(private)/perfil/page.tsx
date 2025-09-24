@@ -54,10 +54,39 @@ export default function PerfilPage() {
     console.log("Salvando informações:", { name, email });
   };
 
-  const handleSecuritySubmit = (e: React.FormEvent) => {
+  const handleSecuritySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você implementaria a lógica para alterar a senha
-    console.log("Alterando senha");
+    
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Limpar formulário
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        
+        // Aqui você pode adicionar uma notificação de sucesso
+        alert("Senha alterada com sucesso!");
+      } else {
+        // Aqui você pode adicionar uma notificação de erro
+        alert(data.error || "Erro ao alterar senha");
+      }
+    } catch (error) {
+      console.error("Erro ao alterar senha:", error);
+      alert("Erro ao alterar senha");
+    }
   };
 
   const isInfoFormValid = name.trim().length > 0;
