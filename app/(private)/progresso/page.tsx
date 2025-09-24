@@ -297,7 +297,7 @@ export default function ProgressPage() {
                         <Link href={
                           uc.status === "nao-iniciado" 
                             ? `/curso/${uc.curso.id}` 
-                            : `/curso/${uc.curso.id}/${getProximaAula(uc.curso, uc.progresso || 0) || ''}`
+                            : `/curso/${uc.curso.id}/aula/${getProximaAula(uc.curso, uc.progresso || 0) || ''}`
                         }>
                           {uc.status === "nao-iniciado" ? "Iniciar Curso" : "Continuar"}
                         </Link>
