@@ -80,6 +80,7 @@ model Curso {
   descricao     String
   thumbnail     String?
   categoriaId   String
+  instrutor     String
   nivel         String // iniciante, intermediario, avancado
   preco         Decimal? @db.Decimal(10, 2)
   precoOriginal Decimal? @db.Decimal(10, 2)
@@ -93,7 +94,6 @@ model Curso {
 
   // Relacionamentos
   categoria     Categoria        @relation(fields: [categoriaId], references: [id])
-  instrutor     String?
   modulos       Modulo[]
   usuarioCursos UsuarioCurso[]
   avaliacoes    CursoAvaliacao[]
