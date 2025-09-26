@@ -84,12 +84,10 @@ export default function Sidebar({
               if (user?.role !== "admin") return null;
 
               return (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (onMenuItemClick) onMenuItemClick(item);
-                    onClose();
-                  }}
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
                   className={cn(
                     "w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
                     item.active ? activeClasses : normalClasses
@@ -107,7 +105,7 @@ export default function Sidebar({
                   <Badge className="ml-auto bg-orange-500 text-white text-xs">
                     ADMIN
                   </Badge>
-                </button>
+                </Link>
               );
             }
 

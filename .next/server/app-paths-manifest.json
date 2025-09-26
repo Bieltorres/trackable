@@ -1,11 +1,8 @@
 {
-  "/api/auth/me/route": "app/api/auth/me/route.js",
-  "/api/cursos/route": "app/api/cursos/route.js",
-  "/api/favoritos/route": "app/api/favoritos/route.js",
-  "/api/usuarios/meus-cursos/route": "app/api/usuarios/meus-cursos/route.js",
   "/(private)/perfil/page": "app/(private)/perfil/page.js",
   "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
   "/(private)/suporte/page": "app/(private)/suporte/page.js",
   "/(private)/anotacoes/page": "app/(private)/anotacoes/page.js",
+  "/(private)/admin/config/page": "app/(private)/admin/config/page.js",
   "/(public)/login/page": "app/(public)/login/page.js"
 }

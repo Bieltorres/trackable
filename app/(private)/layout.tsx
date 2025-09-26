@@ -66,7 +66,7 @@ export default function PrivateLayout({
     { icon: BarChart3, label: "Progresso", href: "/progresso" },
     { icon: FileText, label: "Anotações", href: "/anotacoes" },
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },
-    { icon: Shield, label: "Admin Config", href: "#", isAdmin: true },
+    { icon: Shield, label: "Admin Config", href: "/admin/config", isAdmin: true },
     { icon: User, label: "Configurações", href: "/perfil" },
   ];
 
