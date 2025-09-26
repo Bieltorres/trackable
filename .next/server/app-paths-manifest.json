@@ -1,8 +1,3 @@
 {
-  "/(private)/perfil/page": "app/(private)/perfil/page.js",
-  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
-  "/(private)/suporte/page": "app/(private)/suporte/page.js",
-  "/(private)/anotacoes/page": "app/(private)/anotacoes/page.js",
-  "/(private)/admin/config/page": "app/(private)/admin/config/page.js",
-  "/(public)/login/page": "app/(public)/login/page.js"
+  "/api/admin/cursos/route": "app/api/admin/cursos/route.js"
 }

@@ -27,7 +27,6 @@ model User {
   avaliacoes      CursoAvaliacao[]
   anotacoes       Anotacao[]
   favoritos       Favorito[]
-  cursosInstrutor Curso[]              @relation("CursoInstrutor")
   resetTokens     PasswordResetToken[]
 
   @@map("users")
@@ -95,7 +94,7 @@ model Curso {
 
   // Relacionamentos
   categoria     Categoria        @relation(fields: [categoriaId], references: [id])
-  instrutor     User             @relation("CursoInstrutor", fields: [instrutorId], references: [id])
+  instrutor     String?
   modulos       Modulo[]
   usuarioCursos UsuarioCurso[]
   avaliacoes    CursoAvaliacao[]
