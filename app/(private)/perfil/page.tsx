@@ -63,6 +63,7 @@ export default function PerfilPage() {
     },
     bio: "",
   })
+  const [userInfo, setUserInfo] = useState<any>(null)
   const [senhas, setSenhas] = useState({
     senhaAtual: "",
     novaSenha: "",
@@ -81,9 +82,40 @@ export default function PerfilPage() {
         ...prev,
         nome: user.name || "",
         email: user.email || "",
+        telefone: user.phone || "",
+        dataNascimento: user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : "",
       }))
+      
+      // Buscar informações adicionais do usuário
+      fetchUserInfo()
     }
   }, [user])
+
+  const fetchUserInfo = async () => {
+    try {
+      const response = await fetch("/api/auth/user-info")
+      if (response.ok) {
+        const data = await response.json()
+        setUserInfo(data.userInfo)
+        
+        if (data.userInfo) {
+          setDadosGerais(prev => ({
+            ...prev,
+            bio: data.userInfo.bio || "",
+            endereco: {
+              cep: data.userInfo.cep || "",
+              rua: data.userInfo.rua || "",
+              cidade: data.userInfo.cidade || "",
+              estado: data.userInfo.estado || "",
+              pais: data.userInfo.pais || "Brasil",
+            }
+          }))
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar informações do usuário:", error)
+    }
+  }
 
   // Evita problemas de hidratação
   if (!mounted) {
@@ -116,6 +148,16 @@ export default function PerfilPage() {
         },
         body: JSON.stringify({
           name: dadosGerais.nome,
+          phone: dadosGerais.telefone,
+          birthdate: dadosGerais.dataNascimento ? new Date(dadosGerais.dataNascimento).toISOString() : null,
+          userInfo: {
+            bio: dadosGerais.bio,
+            cep: dadosGerais.endereco.cep,
+            rua: dadosGerais.endereco.rua,
+            cidade: dadosGerais.endereco.cidade,
+            estado: dadosGerais.endereco.estado,
+            pais: dadosGerais.endereco.pais,
+          }
         }),
       })
 
@@ -126,6 +168,10 @@ export default function PerfilPage() {
           title: "Sucesso",
           description: "Informações atualizadas com sucesso!",
         })
+        // Atualizar o estado local
+        if (data.userInfo) {
+          setUserInfo(data.userInfo)
+        }
       } else {
         toast({
           title: "Erro",

@@ -51,6 +51,13 @@ model UserInfo {
   bio          String?
   avatar       String?
   redesSociais Json? // JSON para armazenar links das redes sociais
+  
+  // Campos de endereço
+  cep          String?
+  rua          String?
+  cidade       String?
+  estado       String?
+  pais         String? @default("Brasil")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
