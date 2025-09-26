@@ -11,34 +11,47 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String    @id @default(uuid())
+  email     String    @unique
   name      String
   password  String
   birthdate DateTime?
   phone     String?
-  role      String   @default("student") // student, admin, instructor
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String    @default("student") // student, admin, instructor
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Relacionamentos
-  userInfo          UserInfo?
-  usuarioCursos     UsuarioCurso[]
-  avaliacoes        CursoAvaliacao[]
-  anotacoes         Anotacao[]
-  favoritos         Favorito[]
-  cursosInstrutor   Curso[] @relation("CursoInstrutor")
+  userInfo        UserInfo?
+  usuarioCursos   UsuarioCurso[]
+  avaliacoes      CursoAvaliacao[]
+  anotacoes       Anotacao[]
+  favoritos       Favorito[]
+  cursosInstrutor Curso[]              @relation("CursoInstrutor")
+  resetTokens     PasswordResetToken[]
 
   @@map("users")
 }
 
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
 model UserInfo {
-  id            String  @id @default(uuid())
-  userId        String  @unique
-  bio           String?
-  avatar        String?
-  redesSociais  Json?   // JSON para armazenar links das redes sociais
-  
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  bio          String?
+  avatar       String?
+  redesSociais Json? // JSON para armazenar links das redes sociais
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_infos")
@@ -56,56 +69,56 @@ model Categoria {
 }
 
 model Curso {
-  id                String    @id @default(uuid())
-  titulo            String
-  descricao         String
-  thumbnail         String?
-  categoriaId       String
-  nivel             String    // iniciante, intermediario, avancado
-  instrutorId       String
-  preco             Decimal?  @db.Decimal(10,2)
-  precoOriginal     Decimal?  @db.Decimal(10,2)
-  desconto          Int?      // porcentagem de desconto
-  status            String    @default("rascunho") // rascunho, publicado, arquivado
-  bestseller        Boolean   @default(false)
-  novo              Boolean   @default(false)
-  duracaoTotal      String?   // ex: "2h 30min"
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id            String   @id @default(uuid())
+  titulo        String
+  descricao     String
+  thumbnail     String?
+  categoriaId   String
+  nivel         String // iniciante, intermediario, avancado
+  instrutorId   String
+  preco         Decimal? @db.Decimal(10, 2)
+  precoOriginal Decimal? @db.Decimal(10, 2)
+  desconto      Int? // porcentagem de desconto
+  status        String   @default("rascunho") // rascunho, publicado, arquivado
+  bestseller    Boolean  @default(false)
+  novo          Boolean  @default(false)
+  duracaoTotal  String? // ex: "2h 30min"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relacionamentos
-  categoria         Categoria @relation(fields: [categoriaId], references: [id])
-  instrutor         User @relation("CursoInstrutor", fields: [instrutorId], references: [id])
-  modulos           Modulo[]
-  usuarioCursos     UsuarioCurso[]
-  avaliacoes        CursoAvaliacao[]
-  anotacoes         Anotacao[]
-  favoritos         Favorito[]
+  categoria     Categoria        @relation(fields: [categoriaId], references: [id])
+  instrutor     User             @relation("CursoInstrutor", fields: [instrutorId], references: [id])
+  modulos       Modulo[]
+  usuarioCursos UsuarioCurso[]
+  avaliacoes    CursoAvaliacao[]
+  anotacoes     Anotacao[]
+  favoritos     Favorito[]
 
   @@map("cursos")
 }
 
 model Modulo {
-  id       String @id @default(uuid())
-  cursoId  String
-  titulo   String
-  ordem    Int
-  
-  curso Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  id      String @id @default(uuid())
+  cursoId String
+  titulo  String
+  ordem   Int
+
+  curso Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
   aulas Aula[]
 
   @@map("modulos")
 }
 
 model Aula {
-  id       String @id @default(uuid())
+  id       String  @id @default(uuid())
   moduloId String
   titulo   String
   videoUrl String?
   ordem    Int
   duracao  String? // ex: "15min"
-  
-  modulo            Modulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+
+  modulo            Modulo             @relation(fields: [moduloId], references: [id], onDelete: Cascade)
   usuarioCursoAulas UsuarioCursoAula[]
   anotacoes         Anotacao[]
 
@@ -113,18 +126,18 @@ model Aula {
 }
 
 model UsuarioCurso {
-  id          String    @id @default(uuid())
-  usuarioId   String
-  cursoId     String
-  status      String    @default("nao-iniciado") // nao-iniciado, em-andamento, concluido
-  dataInicio  DateTime?
-  dataCompra  DateTime  @default(now())
-  precoGago   Decimal?  @db.Decimal(10,2)
-  progresso   Int       @default(0) // porcentagem 0-100
+  id         String    @id @default(uuid())
+  usuarioId  String
+  cursoId    String
+  status     String    @default("nao-iniciado") // nao-iniciado, em-andamento, concluido
+  dataInicio DateTime?
+  dataCompra DateTime  @default(now())
+  precoGago  Decimal?  @db.Decimal(10, 2)
+  progresso  Int       @default(0) // porcentagem 0-100
 
   usuario User  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   curso   Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
-  
+
   usuarioCursoAulas UsuarioCursoAula[]
 
   @@unique([usuarioId, cursoId])
@@ -132,15 +145,15 @@ model UsuarioCurso {
 }
 
 model UsuarioCursoAula {
-  id              String    @id @default(uuid())
-  usuarioCursoId  String
-  aulaId          String
-  assistido       Boolean   @default(false)
-  dataAssistido   DateTime?
-  ultimaPosicao   Int       @default(0) // posição em segundos do vídeo
+  id             String    @id @default(uuid())
+  usuarioCursoId String
+  aulaId         String
+  assistido      Boolean   @default(false)
+  dataAssistido  DateTime?
+  ultimaPosicao  Int       @default(0) // posição em segundos do vídeo
 
   usuarioCurso UsuarioCurso @relation(fields: [usuarioCursoId], references: [id], onDelete: Cascade)
-  aula         Aula @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  aula         Aula         @relation(fields: [aulaId], references: [id], onDelete: Cascade)
 
   @@unique([usuarioCursoId, aulaId])
   @@map("usuario_curso_aulas")
@@ -150,7 +163,7 @@ model CursoAvaliacao {
   id         String   @id @default(uuid())
   cursoId    String
   usuarioId  String
-  nota       Int      // 1-5 estrelas
+  nota       Int // 1-5 estrelas
   comentario String?
   data       DateTime @default(now())
 
@@ -162,15 +175,15 @@ model CursoAvaliacao {
 }
 
 model Anotacao {
-  id           String   @id @default(uuid())
-  usuarioId    String
-  cursoId      String
-  aulaId       String?
-  titulo       String
-  conteudo     String
-  cor          String   @default("bg-yellow-100")
-  corTexto     String   @default("text-yellow-800")
-  dataCriacao  DateTime @default(now())
+  id          String   @id @default(uuid())
+  usuarioId   String
+  cursoId     String
+  aulaId      String?
+  titulo      String
+  conteudo    String
+  cor         String   @default("bg-yellow-100")
+  corTexto    String   @default("text-yellow-800")
+  dataCriacao DateTime @default(now())
 
   usuario User  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   curso   Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
@@ -193,13 +206,13 @@ model Favorito {
 }
 
 model ConfigPagamento {
-  id            String  @id @default(uuid())
-  gateway       String  // stripe, ticto, etc
-  chavePublica  String
-  chaveSecreta  String
-  ativo         Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  gateway      String // stripe, ticto, etc
+  chavePublica String
+  chaveSecreta String
+  ativo        Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("config_pagamentos")
 }
