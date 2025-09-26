@@ -81,7 +81,6 @@ model Curso {
   thumbnail     String?
   categoriaId   String
   nivel         String // iniciante, intermediario, avancado
-  instrutorId   String
   preco         Decimal? @db.Decimal(10, 2)
   precoOriginal Decimal? @db.Decimal(10, 2)
   desconto      Int? // porcentagem de desconto

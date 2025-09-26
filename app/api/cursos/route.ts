@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const categoria = searchParams.get('categoria');
-    const nivel = searchParams.get('nivel');
-    const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const categoria = searchParams.get("categoria");
+    const nivel = searchParams.get("nivel");
+    const search = searchParams.get("search");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     const where: any = {
-      status: 'publicado',
+      status: "publicado",
     };
 
     if (categoria) {
@@ -27,8 +27,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { titulo: { contains: search, mode: 'insensitive' } },
-        { descricao: { contains: search, mode: 'insensitive' } },
+        { titulo: { contains: search, mode: "insensitive" } },
+        { descricao: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -37,13 +37,6 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           categoria: true,
-          instrutor: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
           _count: {
             select: {
               usuarioCursos: true,
@@ -52,7 +45,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         skip,
         take: limit,
@@ -68,9 +61,11 @@ export async function GET(request: NextRequest) {
           select: { nota: true },
         });
 
-        const mediaAvaliacoes = avaliacoes.length > 0
-          ? avaliacoes.reduce((sum, av) => sum + av.nota, 0) / avaliacoes.length
-          : 0;
+        const mediaAvaliacoes =
+          avaliacoes.length > 0
+            ? avaliacoes.reduce((sum, av) => sum + av.nota, 0) /
+              avaliacoes.length
+            : 0;
 
         return {
           ...curso,
@@ -87,9 +82,9 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('Erro ao buscar cursos:', error);
+    console.error("Erro ao buscar cursos:", error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: "Erro interno do servidor" },
       { status: 500 }
     );
   }

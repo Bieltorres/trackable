@@ -39,11 +39,10 @@ export interface Curso {
   desconto?: number | null;
   status: "rascunho" | "publicado" | "arquivado";
   categoriaId: string;
-  instrutorId: string;
+  instrutor: string;
   createdAt: Date;
   updatedAt: Date;
   categoria?: Categoria;
-  instrutor?: User;
   modulos?: Modulo[];
   _count?: {
     usuarioCursos: number;
