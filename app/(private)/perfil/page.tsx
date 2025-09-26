@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,22 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { User, Mail, Phone, Calendar, MapPin, Shield, Key, CreditCard, Eye, EyeOff, Save, Trash2, Plus, Check, AlertTriangle } from 'lucide-react'
-
-// Dados simulados do usuário
-const userData = {
-  nome: "João Silva",
-  email: "joao@email.com",
-  telefone: "+55 (11) 99999-9999",
-  dataNascimento: "1990-05-15",
-  endereco: {
-    cep: "01234-567",
-    rua: "Rua das Flores, 123",
-    cidade: "São Paulo",
-    estado: "SP",
-    pais: "Brasil",
-  },
-  bio: "Empreendedor digital apaixonado por marketing e vendas. Sempre em busca de conhecimento para crescer profissionalmente.",
-}
+import { useAppSelector } from "@/store/hooks"
+import { useToast } from "@/components/ui/use-toast"
 
 // Dados simulados de métodos de pagamento
 const metodosPagemento = [
@@ -51,6 +37,10 @@ const metodosPagemento = [
 ]
 
 export default function PerfilPage() {
+  const user = useAppSelector((state) => state.user.user)
+  const { toast } = useToast()
+  const [mounted, setMounted] = useState(false)
+  
   const [activeTab, setActiveTab] = useState("dados-gerais")
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -59,7 +49,20 @@ export default function PerfilPage() {
   const [isStripeLoading, setIsStripeLoading] = useState(false)
 
   // Estados para os formulários
-  const [dadosGerais, setDadosGerais] = useState(userData)
+  const [dadosGerais, setDadosGerais] = useState({
+    nome: "",
+    email: "",
+    telefone: "",
+    dataNascimento: "",
+    endereco: {
+      cep: "",
+      rua: "",
+      cidade: "",
+      estado: "",
+      pais: "Brasil",
+    },
+    bio: "",
+  })
   const [senhas, setSenhas] = useState({
     senhaAtual: "",
     novaSenha: "",
@@ -71,30 +74,134 @@ export default function PerfilPage() {
     sessaoUnica: false,
   })
 
+  useEffect(() => {
+    setMounted(true)
+    if (user) {
+      setDadosGerais(prev => ({
+        ...prev,
+        nome: user.name || "",
+        email: user.email || "",
+      }))
+    }
+  }, [user])
+
+  // Evita problemas de hidratação
+  if (!mounted) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurações da Conta</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-10 bg-gray-200 rounded mb-4"></div>
+              <div className="h-10 bg-gray-200 rounded mb-4"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const handleSalvarDadosGerais = async () => {
-    setIsLoading(true)
-    // Simular salvamento
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    alert("Dados salvos com sucesso!")
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch("/api/auth/update-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: dadosGerais.nome,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Sucesso",
+          description: "Informações atualizadas com sucesso!",
+        })
+      } else {
+        toast({
+          title: "Erro",
+          description: data.error || "Erro ao atualizar informações",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar informações:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar informações",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleAlterarSenha = async () => {
     if (senhas.novaSenha !== senhas.confirmarSenha) {
-      alert("As senhas não coincidem!")
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem!",
+        variant: "destructive",
+      })
       return
     }
-    if (senhas.novaSenha.length < 8) {
-      alert("A nova senha deve ter pelo menos 8 caracteres!")
+    if (senhas.novaSenha.length < 6) {
+      toast({
+        title: "Erro",
+        description: "A nova senha deve ter pelo menos 6 caracteres!",
+        variant: "destructive",
+      })
       return
     }
 
-    setIsLoading(true)
-    // Simular alteração de senha
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    setSenhas({ senhaAtual: "", novaSenha: "", confirmarSenha: "" })
-    alert("Senha alterada com sucesso!")
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: senhas.senhaAtual,
+          newPassword: senhas.novaSenha,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSenhas({ senhaAtual: "", novaSenha: "", confirmarSenha: "" })
+        toast({
+          title: "Sucesso",
+          description: "Senha alterada com sucesso!",
+        })
+      } else {
+        toast({
+          title: "Erro",
+          description: data.error || "Erro ao alterar senha",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao alterar senha:", error)
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar senha",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleRemoverCartao = (id: number) => {
@@ -199,7 +306,7 @@ export default function PerfilPage() {
                       id="email"
                       type="email"
                       value={dadosGerais.email}
-                      onChange={(e) => setDadosGerais({ ...dadosGerais, email: e.target.value })}
+                      disabled
                       className="pl-10"
                     />
                   </div>
@@ -320,7 +427,10 @@ export default function PerfilPage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button onClick={handleSalvarDadosGerais} disabled={isLoading}>
+            <Button 
+              onClick={handleSalvarDadosGerais} 
+              disabled={isLoading || !dadosGerais.nome.trim()}
+            >
               {isLoading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -388,7 +498,7 @@ export default function PerfilPage() {
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres</p>
+                <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres</p>
               </div>
 
               <div className="space-y-2">
@@ -413,7 +523,16 @@ export default function PerfilPage() {
                 </div>
               </div>
 
-              <Button onClick={handleAlterarSenha} disabled={isLoading}>
+              <Button 
+                onClick={handleAlterarSenha} 
+                disabled={
+                  isLoading || 
+                  !senhas.senhaAtual || 
+                  !senhas.novaSenha || 
+                  senhas.novaSenha.length < 6 ||
+                  senhas.novaSenha !== senhas.confirmarSenha
+                }
+              >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -426,6 +545,12 @@ export default function PerfilPage() {
                   </>
                 )}
               </Button>
+              {senhas.novaSenha.length > 0 && senhas.novaSenha.length < 6 && (
+                <p className="text-sm text-red-500">A senha deve ter pelo menos 6 caracteres</p>
+              )}
+              {senhas.confirmarSenha.length > 0 && senhas.confirmarSenha !== senhas.novaSenha && (
+                <p className="text-sm text-red-500">As senhas não coincidem</p>
+              )}
             </CardContent>
           </Card>
 
