@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name } = await req.json();
+    const { name, phone, birthdate, userInfo } = await req.json();
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
@@ -45,21 +45,57 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Atualizar nome do usuário
+    // Preparar dados para atualização do usuário
+    const userData: any = { name: name.trim() };
+    
+    if (phone !== undefined) {
+      userData.phone = phone;
+    }
+    
+    if (birthdate !== undefined) {
+      userData.birthdate = birthdate ? new Date(birthdate) : null;
+    }
+
+    // Atualizar informações do usuário
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { name: name.trim() },
+      data: userData,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        phone: true,
+        birthdate: true,
       },
     });
 
+    // Atualizar ou criar UserInfo se fornecido
+    let updatedUserInfo = null;
+    if (userInfo) {
+      const userInfoData = {
+        bio: userInfo.bio || null,
+        cep: userInfo.cep || null,
+        rua: userInfo.rua || null,
+        cidade: userInfo.cidade || null,
+        estado: userInfo.estado || null,
+        pais: userInfo.pais || "Brasil",
+      };
+
+      updatedUserInfo = await prisma.userInfo.upsert({
+        where: { userId },
+        update: userInfoData,
+        create: {
+          userId,
+          ...userInfoData,
+        },
+      });
+    }
+
     return NextResponse.json({ 
       message: "Informações atualizadas com sucesso",
-      user: updatedUser 
+      user: updatedUser,
+      userInfo: updatedUserInfo
     });
   } catch (error) {
     console.error("Erro em update-profile:", error);
