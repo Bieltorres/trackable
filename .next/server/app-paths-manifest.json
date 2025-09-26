@@ -1,5 +1,4 @@
 {
-  "/(public)/login/page": "app/(public)/login/page.js",
-  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
-  "/(private)/perfil/page": "app/(private)/perfil/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/update-profile/route": "app/api/auth/update-profile/route.js"
 }
