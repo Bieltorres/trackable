@@ -43,7 +43,7 @@ type PaymentPlatform = 'stripe' | 'ticto'
 export default function AdminConfigPage() {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('course-management')
-  const [courseManagementTab, setCourseManagementTab] = useState('aulas')
+  const [courseManagementTab, setCourseManagementTab] = useState('cursos')
   const [isLoading, setIsLoading] = useState(false)
 
   // State for data
@@ -400,17 +400,17 @@ export default function AdminConfigPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="aulas">
-                <Play className="h-4 w-4 mr-2" />
-                Aulas
+              <TabsTrigger value="cursos">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Cursos
               </TabsTrigger>
               <TabsTrigger value="modulos">
                 <Folder className="h-4 w-4 mr-2" />
                 Módulos
               </TabsTrigger>
-              <TabsTrigger value="cursos">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Cursos
+              <TabsTrigger value="aulas">
+                <Play className="h-4 w-4 mr-2" />
+                Aulas
               </TabsTrigger>
             </TabsList>
 
