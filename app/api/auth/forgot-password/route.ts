@@ -1,16 +1,12 @@
 // app/api/auth/forgot-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
-import sgMail from "@sendgrid/mail";
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
-const JWT_SECRET = process.env.JWT_SECRET!;
+import crypto from "crypto";
+import { sendEmail } from "@/lib/sendgtid";
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
-
     if (!email) {
       return NextResponse.json(
         { error: "Email é obrigatório" },
@@ -19,42 +15,56 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
+
+    const genericSuccess = NextResponse.json({
+      message:
+        "Se esse email estiver cadastrado, você receberá instruções para redefinir a senha.",
+    });
+
     if (!user) {
-      // Não revela se o usuário existe
-      return NextResponse.json({
-        message: "Se este email estiver cadastrado, enviaremos instruções.",
-      });
+      return genericSuccess;
     }
 
-    // Criar token válido por 1h
-    const token = jwt.sign({ sub: user.id }, JWT_SECRET, { expiresIn: "1h" });
-
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
-
-    const msg = {
-      to: email,
-      from: process.env.SENDGRID_FROM!, // configurado no seu .env
-      subject: "Recupere sua senha",
-      html: `
-        <p>Olá ${user.name || "usuário"},</p>
-        <p>Você solicitou a redefinição de senha. Clique no link abaixo para criar uma nova senha:</p>
-        <a href="${resetLink}" target="_blank">${resetLink}</a>
-        <p>Esse link expira em 1 hora.</p>
-        <br/>
-        <p>Se você não solicitou, ignore este email.</p>
-      `,
-    };
-
-    await sgMail.send(msg);
-
-    return NextResponse.json({
-      message: "Instruções enviadas para o email informado.",
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: user.id },
     });
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+
+    const created = await prisma.passwordResetToken.create({
+      data: {
+        token: tokenHash, // armazenamos o hash
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}`;
+
+    try {
+      const html = `
+        <p>Olá ${user.name ?? "usuário"},</p>
+        <p>Você solicitou a redefinição de senha. Clique no link abaixo para criar uma nova senha (válido por 1 hora):</p>
+        <p><a href="${resetLink}" target="_blank">${resetLink}</a></p>
+        <p>Se você não solicitou, ignore este email.</p>
+      `;
+      await sendEmail(user.email, "Recuperação de senha", html);
+    } catch (err) {
+      await prisma.passwordResetToken.delete({
+        where: { id: created.id },
+      });
+      console.error("Erro ao enviar email de recuperação:", err);
+      return genericSuccess;
+    }
+
+    return genericSuccess;
   } catch (error) {
     console.error("Erro em forgot-password:", error);
-    return NextResponse.json(
-      { error: "Erro ao enviar email" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

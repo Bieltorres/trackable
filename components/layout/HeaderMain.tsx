@@ -21,12 +21,14 @@ export function HeaderMain({
   const router = useRouter();
   const user = useSelector((state: RootState) => state.user.user);
 
+  console.log("User role:", user?.role); 
+
   if (!user) return null;
 
-  const handleLogout = async () => {
+  const handleLogout: () => Promise<void> = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login"); // redireciona para login
+      router.push("/login");
     } catch (error) {
       console.error("Erro no logout:", error);
     }
@@ -46,12 +48,10 @@ export function HeaderMain({
 
         <h1 className="text-xl font-bold text-gray-900">{title}</h1>
 
-        {isAdmin && (
           <Badge className="ml-3 bg-orange-100 text-orange-800">
             <Shield className="h-3 w-3 mr-1" />
             Modo {user.role}
           </Badge>
-        )}
       </div>
 
       <div className="flex items-center space-x-4">

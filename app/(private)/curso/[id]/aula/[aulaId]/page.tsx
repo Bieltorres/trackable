@@ -4,41 +4,26 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Badge } from "@/components/ui/badge"
 import {
-  BookOpen,
-  User,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  BarChart3,
-  FileText,
-  MessageCircle,
   ChevronDown,
   ChevronRight,
   Clock,
-  CheckCircle,
   PlayCircle,
   Download,
   Plus,
   Upload,
   Save,
   Edit3,
-  Shield,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { UserSettingsModal } from "@/components/user-settings-modal"
 import { AdminConfigModal } from "@/components/admin-config-modal"
 import { useAppSelector } from "@/store/hooks"
-import { useToast } from "@/hooks/use-toast"
-
+import { useToast } from "@/components/ui/use-toast"
 export default function AulaPage() {
   const params = useParams()
   const { user } = useAppSelector((state) => state.user)
@@ -52,7 +37,6 @@ export default function AulaPage() {
   
   // Estados existentes
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
   const [modulosAbertos, setModulosAbertos] = useState<number[]>([])
   const [isAdminMode, setIsAdminMode] = useState(false)
   const [editandoConteudo, setEditandoConteudo] = useState(false)
@@ -61,14 +45,6 @@ export default function AulaPage() {
   const [novoArquivo, setNovoArquivo] = useState({ nome: "", tipo: "", tamanho: "" })
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false)
-
-  const menuItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
-    { icon: BarChart3, label: "Progresso", href: "/progresso", active: false },
-    { icon: FileText, label: "Anotações", href: "/anotacoes", active: false },
-    { icon: MessageCircle, label: "Suporte", href: "/suporte", active: false },
-    ...(isAdmin ? [{ icon: Shield, label: "Admin Config", href: "#", active: false, isAdmin: true }] : []),
-  ]
 
   // Buscar dados da aula
   useEffect(() => {
@@ -111,12 +87,6 @@ export default function AulaPage() {
       fetchAulaData()
     }
   }, [params.id, params.aulaId, toast])
-
-  const handleMenuClick = (item: any) => {
-    if (item.isAdmin) {
-      setIsAdminConfigOpen(true)
-    }
-  }
 
   const toggleModulo = (moduloId: number) => {
     setModulosAbertos((prev) => (prev.includes(moduloId) ? prev.filter((id) => id !== moduloId) : [...prev, moduloId]))

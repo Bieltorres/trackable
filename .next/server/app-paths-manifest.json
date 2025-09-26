@@ -1,7 +1,5 @@
 {
-  "/dashboard/page": "app/dashboard/page.js",
-  "/recuperar-senha/page": "app/recuperar-senha/page.js",
-  "/login/page": "app/login/page.js",
-  "/registro/page": "app/registro/page.js",
-  "/anotacoes/page": "app/anotacoes/page.js"
+  "/(public)/login/page": "app/(public)/login/page.js",
+  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
+  "/(private)/perfil/page": "app/(private)/perfil/page.js"
 }

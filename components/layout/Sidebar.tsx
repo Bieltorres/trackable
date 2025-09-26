@@ -2,12 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { BookOpen, X } from "lucide-react";
+import { BookOpen, Settings, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import Router from "next/router";
 
 export interface MenuItem {
   label: string;
@@ -185,22 +186,13 @@ export default function Sidebar({
             </div>
           </div>
 
-          <button
+          <Link
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-            onClick={() => {
-              // se você quiser abrir modal de configurações via prop, substitua por prop
-              window.dispatchEvent(new CustomEvent("open-settings"));
-            }}
+            href="/perfil"
             aria-label="Configurações"
           >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 8a4 4 0 100 8 4 4 0 000-8z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </button>
+            <Settings className="h-5 w-5" />
+          </Link>
         </div>
       </div>
     </aside>

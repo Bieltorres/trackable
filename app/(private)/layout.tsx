@@ -47,12 +47,15 @@ export default function PrivateLayout({
       setLayoutError(true);
     };
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener("error", handleError);
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection
+      );
     };
   }, []);
 
@@ -90,48 +93,55 @@ export default function PrivateLayout({
 
   return (
     <Providers>
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        menuItems={menuItems}
-      />
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+      <div className="min-h-screen flex bg-gray-50">
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          menuItems={menuItems}
         />
-      )}
-
-      <HeaderMain
-        title={pageTitle}
-        isAdmin={isAdmin}
-        onSidebarToggle={() => setSidebarOpen(true)}
-      />
-
-      <main className="p-6">
-        {layoutError ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h2 className="text-red-800 font-semibold mb-2">Algo deu errado</h2>
-            <p className="text-red-600">
-              Ocorreu um erro inesperado. O header foi mantido para facilitar a navegação.
-            </p>
-            <button
-              onClick={() => setLayoutError(false)}
-              className="mt-3 mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Tentar novamente
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Recarregar página
-            </button>
-          </div>
-        ) : (
-          children
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
-      </main>
+
+        <div className="flex-1 flex flex-col ">
+          <HeaderMain
+            title={pageTitle}
+            isAdmin={isAdmin}
+            onSidebarToggle={() => setSidebarOpen(true)}
+          />
+
+          <main className="p-6">
+            {layoutError ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h2 className="text-red-800 font-semibold mb-2">
+                  Algo deu errado
+                </h2>
+                <p className="text-red-600">
+                  Ocorreu um erro inesperado. O header foi mantido para
+                  facilitar a navegação.
+                </p>
+                <button
+                  onClick={() => setLayoutError(false)}
+                  className="mt-3 mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Tentar novamente
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Recarregar página
+                </button>
+              </div>
+            ) : (
+              children
+            )}
+          </main>
+        </div>
+      </div>
       <Toaster />
     </Providers>
   );

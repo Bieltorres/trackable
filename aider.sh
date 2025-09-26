@@ -1,1 +1,1 @@
-aider --browser --model "anthropic/claude-4"
+aider --browser --model "anthropic/claude-sonnet-4-20250514"

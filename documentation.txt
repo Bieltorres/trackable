@@ -1,0 +1,92 @@
+Guia Rápido do Prisma
+=====================
+
+Este documento descreve os principais comandos do Prisma utilizados no projeto,
+com uma breve explicação de cada um.
+
+--------------------------------------
+1. Gerar o cliente Prisma
+--------------------------------------
+Comando:
+    npx prisma generate
+
+Descrição:
+    Gera/atualiza o Prisma Client (@prisma/client) com base no schema.prisma.
+    É obrigatório rodar após qualquer alteração no schema.
+
+--------------------------------------
+2. Criar uma migration nova
+--------------------------------------
+Comando:
+    npx prisma migrate dev --name nome_da_migration
+
+Descrição:
+    Cria e aplica uma migration no banco durante o desenvolvimento.
+    - '--name' é um identificador da migration (ex: add_user_role).
+    - Atualiza o banco e o histórico de migrations.
+
+--------------------------------------
+3. Resetar o banco
+--------------------------------------
+Comando:
+    npx prisma migrate reset
+
+Descrição:
+    Apaga TODOS os dados e recria o banco do zero com base nas migrations.
+    Muito útil em ambiente de desenvolvimento e testes.
+
+--------------------------------------
+4. Executar seeders
+--------------------------------------
+Comando:
+    npx prisma db seed
+
+Descrição:
+    Roda o script definido no package.json ou no prisma.config.ts para popular
+    o banco com dados iniciais.
+
+--------------------------------------
+5. Abrir o Prisma Studio
+--------------------------------------
+Comando:
+    npx prisma studio
+
+Descrição:
+    Abre uma interface web no navegador para visualizar e editar dados do banco
+    de forma amigável.
+
+--------------------------------------
+6. Sincronizar sem migrations (prototipagem)
+--------------------------------------
+Comando:
+    npx prisma db push
+
+Descrição:
+    Aplica o schema.prisma diretamente no banco, sem gerar migration.
+    Uso recomendado apenas para prototipagem.
+
+--------------------------------------
+7. Puxar o schema do banco existente
+--------------------------------------
+Comando:
+    npx prisma db pull
+
+Descrição:
+    Atualiza o schema.prisma com base em um banco de dados existente.
+    Útil se o banco foi criado manualmente ou já existe.
+
+--------------------------------------
+Fluxo típico no desenvolvimento
+--------------------------------------
+1. Editar o schema.prisma
+2. Criar migration:
+       npx prisma migrate dev --name add_courses_table
+3. Gerar client:
+       npx prisma generate
+4. (Opcional) Rodar seeders:
+       npx prisma db seed
+5. (Opcional) Visualizar no Prisma Studio:
+       npx prisma studio
+
+--------------------------------------
+Fim do documento

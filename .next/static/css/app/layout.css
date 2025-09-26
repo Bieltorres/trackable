@@ -1,3 +1,28 @@
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[3].use[1]!./node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[3].use[2]!./node_modules/next/font/local/target.css?{"path":"node_modules\\geist\\dist\\sans.js","import":"","arguments":[{"src":"./fonts/geist-sans/Geist-Variable.woff2","variable":"--font-geist-sans","weight":"100 900"}],"variableName":"GeistSans"} ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+@font-face {
+font-family: 'GeistSans';
+src: url(/_next/static/media/028c0d39d2e8f589-s.p.woff2) format('woff2');
+font-display: swap;
+font-weight: 100 900;
+}@font-face {font-family: 'GeistSans Fallback';src: local("Arial");ascent-override: 85.83%;descent-override: 20.53%;line-gap-override: 9.33%;size-adjust: 107.19%
+}.__className_fb8f2c {font-family: 'GeistSans', 'GeistSans Fallback'
+}.__variable_fb8f2c {--font-geist-sans: 'GeistSans', 'GeistSans Fallback'
+}
+
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[3].use[1]!./node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[3].use[2]!./node_modules/next/font/local/target.css?{"path":"node_modules\\geist\\dist\\mono.js","import":"","arguments":[{"src":"./fonts/geist-mono/GeistMono-Variable.woff2","variable":"--font-geist-mono","adjustFontFallback":false,"fallback":["ui-monospace","SFMono-Regular","Roboto Mono","Menlo","Monaco","Liberation Mono","DejaVu Sans Mono","Courier New","monospace"],"weight":"100 900"}],"variableName":"GeistMono"} ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+@font-face {
+font-family: 'GeistMono';
+src: url(/_next/static/media/5b01f339abf2f1a5.p.woff2) format('woff2');
+font-display: swap;
+font-weight: 100 900;
+}.__className_f910ec {font-family: 'GeistMono', ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Liberation Mono, DejaVu Sans Mono, Courier New, monospace
+}.__variable_f910ec {--font-geist-mono: 'GeistMono', ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Liberation Mono, DejaVu Sans Mono, Courier New, monospace
+}
+
 /*!*************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[10].use[3]!./app/globals.css ***!
   \*************************************************************************************************************************************************************************************************************************************************************/
@@ -554,6 +579,9 @@ video {
 .pointer-events-auto {
   pointer-events: auto;
 }
+.static {
+  position: static;
+}
 .fixed {
   position: fixed;
 }
@@ -609,6 +637,9 @@ video {
 .top-0 {
   top: 0px;
 }
+.top-1\/2 {
+  top: 50%;
+}
 .top-2 {
   top: 0.5rem;
 }
@@ -639,10 +670,6 @@ video {
 .-mx-1 {
   margin-left: -0.25rem;
   margin-right: -0.25rem;
-}
-.mx-2 {
-  margin-left: 0.5rem;
-  margin-right: 0.5rem;
 }
 .mx-auto {
   margin-left: auto;
@@ -709,6 +736,9 @@ video {
 .mt-4 {
   margin-top: 1rem;
 }
+.mt-5 {
+  margin-top: 1.25rem;
+}
 .mt-6 {
   margin-top: 1.5rem;
 }
@@ -717,9 +747,6 @@ video {
 }
 .mt-auto {
   margin-top: auto;
-}
-.mt-5 {
-  margin-top: 1.25rem;
 }
 .line-clamp-2 {
   overflow: hidden;
@@ -784,6 +811,9 @@ video {
 .h-3\.5 {
   height: 0.875rem;
 }
+.h-32 {
+  height: 8rem;
+}
 .h-4 {
   height: 1rem;
 }
@@ -795,6 +825,9 @@ video {
 }
 .h-6 {
   height: 1.5rem;
+}
+.h-64 {
+  height: 16rem;
 }
 .h-8 {
   height: 2rem;
@@ -822,9 +855,6 @@ video {
 }
 .h-screen {
   height: 100vh;
-}
-.h-32 {
-  height: 8rem;
 }
 .max-h-48 {
   max-height: 12rem;
@@ -856,6 +886,9 @@ video {
 .min-h-screen {
   min-height: 100vh;
 }
+.w-1\/4 {
+  width: 25%;
+}
 .w-10 {
   width: 2.5rem;
 }
@@ -877,11 +910,20 @@ video {
 .w-24 {
   width: 6rem;
 }
+.w-28 {
+  width: 7rem;
+}
 .w-3 {
   width: 0.75rem;
 }
 .w-3\.5 {
   width: 0.875rem;
+}
+.w-3\/4 {
+  width: 75%;
+}
+.w-32 {
+  width: 8rem;
 }
 .w-4 {
   width: 1rem;
@@ -915,12 +957,6 @@ video {
 }
 .w-px {
   width: 1px;
-}
-.w-28 {
-  width: 7rem;
-}
-.w-32 {
-  width: 8rem;
 }
 .min-w-0 {
   min-width: 0px;
@@ -962,6 +998,10 @@ video {
   --tw-translate-x: -100%;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
+.-translate-y-1\/2 {
+  --tw-translate-y: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
 .translate-x-0 {
   --tw-translate-x: 0px;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
@@ -977,15 +1017,6 @@ video {
 .transform {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
-@keyframes spin {
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
 @keyframes pulse {
 
   50% {
@@ -994,6 +1025,15 @@ video {
 }
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes spin {
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 .cursor-default {
   cursor: default;
@@ -1061,11 +1101,11 @@ video {
 .gap-4 {
   gap: 1rem;
 }
-.gap-6 {
-  gap: 1.5rem;
-}
 .gap-5 {
   gap: 1.25rem;
+}
+.gap-6 {
+  gap: 1.5rem;
 }
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
@@ -1166,10 +1206,6 @@ video {
   border-top-left-radius: 0.75rem;
   border-top-right-radius: 0.75rem;
 }
-.rounded-t-md {
-  border-top-left-radius: calc(var(--radius) - 2px);
-  border-top-right-radius: calc(var(--radius) - 2px);
-}
 .border {
   border-width: 1px;
 }
@@ -1209,6 +1245,10 @@ video {
 .border-blue-200 {
   --tw-border-opacity: 1;
   border-color: rgb(191 219 254 / var(--tw-border-opacity, 1));
+}
+.border-blue-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(37 99 235 / var(--tw-border-opacity, 1));
 }
 .border-destructive {
   border-color: hsl(var(--destructive));
@@ -1257,10 +1297,6 @@ video {
 .border-white {
   --tw-border-opacity: 1;
   border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
-}
-.border-blue-600 {
-  --tw-border-opacity: 1;
-  border-color: rgb(37 99 235 / var(--tw-border-opacity, 1));
 }
 .border-l-blue-500 {
   --tw-border-opacity: 1;
@@ -1323,6 +1359,10 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
 }
+.bg-gray-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
 .bg-gray-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
@@ -1333,6 +1373,10 @@ video {
 .bg-gray-700 {
   --tw-bg-opacity: 1;
   background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-800 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));
 }
 .bg-green-100 {
   --tw-bg-opacity: 1;
@@ -1391,8 +1435,16 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
 }
+.bg-red-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 38 38 / var(--tw-bg-opacity, 1));
+}
 .bg-secondary {
   background-color: hsl(var(--secondary));
+}
+.bg-slate-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
 .bg-slate-600 {
   --tw-bg-opacity: 1;
@@ -1412,9 +1464,6 @@ video {
 .bg-white\/20 {
   background-color: rgb(255 255 255 / 0.2);
 }
-.bg-white\/80 {
-  background-color: rgb(255 255 255 / 0.8);
-}
 .bg-white\/90 {
   background-color: rgb(255 255 255 / 0.9);
 }
@@ -1425,14 +1474,6 @@ video {
 .bg-yellow-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(234 179 8 / var(--tw-bg-opacity, 1));
-}
-.bg-gray-200 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
-}
-.bg-slate-200 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
 }
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
@@ -1572,6 +1613,9 @@ video {
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
+.pb-3 {
+  padding-bottom: 0.75rem;
+}
 .pb-4 {
   padding-bottom: 1rem;
 }
@@ -1599,6 +1643,9 @@ video {
 .pt-0 {
   padding-top: 0px;
 }
+.pt-2 {
+  padding-top: 0.5rem;
+}
 .pt-3 {
   padding-top: 0.75rem;
 }
@@ -1607,9 +1654,6 @@ video {
 }
 .pt-6 {
   padding-top: 1.5rem;
-}
-.pt-5 {
-  padding-top: 1.25rem;
 }
 .text-left {
   text-align: left;
@@ -1626,6 +1670,10 @@ video {
 .text-2xl {
   font-size: 1.5rem;
   line-height: 2rem;
+}
+.text-3xl {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
 }
 .text-base {
   font-size: 1rem;
@@ -1695,10 +1743,6 @@ video {
 .text-blue-100 {
   --tw-text-opacity: 1;
   color: rgb(219 234 254 / var(--tw-text-opacity, 1));
-}
-.text-blue-400 {
-  --tw-text-opacity: 1;
-  color: rgb(96 165 250 / var(--tw-text-opacity, 1));
 }
 .text-blue-600 {
   --tw-text-opacity: 1;
@@ -1799,6 +1843,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(239 68 68 / var(--tw-text-opacity, 1));
 }
+.text-red-600 {
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
 .text-red-800 {
   --tw-text-opacity: 1;
   color: rgb(153 27 27 / var(--tw-text-opacity, 1));
@@ -1830,9 +1878,8 @@ video {
   --tw-text-opacity: 1;
   color: rgb(133 77 14 / var(--tw-text-opacity, 1));
 }
-.text-\[\#2563eb\] {
-  --tw-text-opacity: 1;
-  color: rgb(37 99 235 / var(--tw-text-opacity, 1));
+.line-through {
+  text-decoration-line: line-through;
 }
 .underline-offset-4 {
   text-underline-offset: 4px;
@@ -2025,6 +2072,11 @@ video {
   background-color: rgb(0 0 0 / 0.7);
 }
 
+.hover\:bg-blue-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(29 78 216 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-destructive\/80:hover {
   background-color: hsl(var(--destructive) / 0.8);
 }
@@ -2054,6 +2106,11 @@ video {
 
 .hover\:bg-primary\/90:hover {
   background-color: hsl(var(--primary) / 0.9);
+}
+
+.hover\:bg-red-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(185 28 28 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-secondary:hover {
@@ -2443,8 +2500,8 @@ video {
     top: auto;
   }
 
-  .sm\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .sm\:w-48 {
+    width: 12rem;
   }
 
   .sm\:flex-row {
@@ -2455,8 +2512,16 @@ video {
     flex-direction: column;
   }
 
+  .sm\:items-center {
+    align-items: center;
+  }
+
   .sm\:justify-end {
     justify-content: flex-end;
+  }
+
+  .sm\:justify-between {
+    justify-content: space-between;
   }
 
   .sm\:space-x-2 > :not([hidden]) ~ :not([hidden]) {
@@ -2578,30 +2643,5 @@ video {
 
 .\[\&_svg\]\:shrink-0 svg {
   flex-shrink: 0;
-}
-
-/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[3].use[1]!./node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[3].use[2]!./node_modules/next/font/local/target.css?{"path":"node_modules\\geist\\dist\\sans.js","import":"","arguments":[{"src":"./fonts/geist-sans/Geist-Variable.woff2","variable":"--font-geist-sans","weight":"100 900"}],"variableName":"GeistSans"} ***!
-  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-@font-face {
-font-family: 'GeistSans';
-src: url(/_next/static/media/028c0d39d2e8f589-s.p.woff2) format('woff2');
-font-display: swap;
-font-weight: 100 900;
-}@font-face {font-family: 'GeistSans Fallback';src: local("Arial");ascent-override: 85.83%;descent-override: 20.53%;line-gap-override: 9.33%;size-adjust: 107.19%
-}.__className_fb8f2c {font-family: 'GeistSans', 'GeistSans Fallback'
-}.__variable_fb8f2c {--font-geist-sans: 'GeistSans', 'GeistSans Fallback'
-}
-
-/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[3].use[1]!./node_modules/next/dist/build/webpack/loaders/next-font-loader/index.js??ruleSet[1].rules[13].oneOf[3].use[2]!./node_modules/next/font/local/target.css?{"path":"node_modules\\geist\\dist\\mono.js","import":"","arguments":[{"src":"./fonts/geist-mono/GeistMono-Variable.woff2","variable":"--font-geist-mono","adjustFontFallback":false,"fallback":["ui-monospace","SFMono-Regular","Roboto Mono","Menlo","Monaco","Liberation Mono","DejaVu Sans Mono","Courier New","monospace"],"weight":"100 900"}],"variableName":"GeistMono"} ***!
-  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
-@font-face {
-font-family: 'GeistMono';
-src: url(/_next/static/media/5b01f339abf2f1a5.p.woff2) format('woff2');
-font-display: swap;
-font-weight: 100 900;
-}.__className_f910ec {font-family: 'GeistMono', ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Liberation Mono, DejaVu Sans Mono, Courier New, monospace
-}.__variable_f910ec {--font-geist-mono: 'GeistMono', ui-monospace, SFMono-Regular, Roboto Mono, Menlo, Monaco, Liberation Mono, DejaVu Sans Mono, Courier New, monospace
 }
 

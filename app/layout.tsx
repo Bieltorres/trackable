@@ -4,12 +4,11 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "./providers";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 export const metadata: Metadata = {
-  title: "v0 App",
+  title: "Área de Membros",
   description: "Created with v0",
-  generator: "v0.dev",
+  generator: "Gabriel Torres",
 };
 
 export default function RootLayout({
@@ -30,7 +29,7 @@ html {
       </head>
       <body>
         <Providers>
-          <DashboardLayout>{children}</DashboardLayout>
+          {children}
           <Toaster />
         </Providers>
       </body>

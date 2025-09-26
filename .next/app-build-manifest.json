@@ -1,100 +1,100 @@
 {
   "pages": {
-    "/api/auth/register/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/register/route.js"
-    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/login/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/chunks/app/page.js"
+    ],
+    "/(public)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/layout.js"
+    ],
+    "/(public)/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(public)/login/page.js"
     ],
     "/api/auth/login/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/login/route.js"
     ],
-    "/dashboard/loading": [
+    "/(private)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/loading.js"
+      "static/chunks/app/(private)/layout.js"
     ],
-    "/dashboard/page": [
+    "/(private)/dashboard/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/page.js"
+      "static/chunks/app/(private)/dashboard/loading.js"
     ],
-    "/curso/[id]/aula/[aulaId]/loading": [
+    "/(private)/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/curso/[id]/aula/[aulaId]/loading.js"
-    ],
-    "/curso/[id]/aula/[aulaId]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/curso/[id]/aula/[aulaId]/page.js"
-    ],
-    "/api/auth/logout/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/logout/route.js"
-    ],
-    "/registro/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/registro/page.js"
+      "static/chunks/app/(private)/dashboard/page.js"
     ],
     "/api/auth/me/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/me/route.js"
     ],
-    "/api/cursos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/cursos/route.js"
-    ],
     "/api/favoritos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/favoritos/route.js"
+    ],
+    "/api/cursos/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/cursos/route.js"
     ],
     "/api/usuarios/meus-cursos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/usuarios/meus-cursos/route.js"
     ],
-    "/anotacoes/loading": [
+    "/(private)/perfil/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/anotacoes/loading.js"
+      "static/chunks/app/(private)/perfil/page.js"
     ],
-    "/anotacoes/page": [
+    "/api/auth/logout/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/anotacoes/page.js"
+      "static/chunks/app/api/auth/logout/route.js"
     ],
-    "/progresso/page": [
+    "/api/auth/change-password/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/progresso/page.js"
+      "static/chunks/app/api/auth/change-password/route.js"
     ],
-    "/recuperar-senha/page": [
+    "/api/stripe/create-portal/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/recuperar-senha/page.js"
+      "static/chunks/app/api/stripe/create-portal/route.js"
     ],
-    "/api/auth/forgot-password/route": [
+    "/api/auth/update-profile/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/forgot-password/route.js"
+      "static/chunks/app/api/auth/update-profile/route.js"
+    ],
+    "/(private)/error": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/error.js"
+    ],
+    "/error": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/error.js"
     ]
   }
 }
