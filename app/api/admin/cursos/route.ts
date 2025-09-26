@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
         instrutor: curso.instrutor,
         categoria: curso.categoria,
         preco: curso.preco,
+        nivel: curso.nivel,
         status: curso.status,
         thumbnail: curso.thumbnail,
         dataLancamento: curso.createdAt,
@@ -114,11 +115,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { titulo, descricao, instrutor, categoria, preco, modulosSelecionados } = await req.json();
+    const { titulo, descricao, instrutor, categoria, preco, nivel, modulosSelecionados } = await req.json();
 
     if (!titulo || !descricao || !instrutor) {
       return NextResponse.json(
         { error: "Título, descrição e instrutor são obrigatórios" },
+        { status: 400 }
+      );
+    }
+
+    // Validar nível se fornecido
+    if (nivel && !['iniciante', 'intermediario', 'avancado'].includes(nivel)) {
+      return NextResponse.json(
+        { error: "Nível deve ser: iniciante, intermediario ou avancado" },
         { status: 400 }
       );
     }
@@ -131,6 +140,7 @@ export async function POST(req: NextRequest) {
         instrutor,
         categoria: categoria || 'Geral',
         preco: preco ? parseFloat(preco) : 0,
+        nivel: nivel || 'iniciante',
         status: 'ativo',
       },
     });
@@ -172,6 +182,7 @@ export async function POST(req: NextRequest) {
         instrutor: cursoCompleto!.instrutor,
         categoria: cursoCompleto!.categoria,
         preco: cursoCompleto!.preco,
+        nivel: cursoCompleto!.nivel,
         status: cursoCompleto!.status,
         thumbnail: cursoCompleto!.thumbnail,
         dataLancamento: cursoCompleto!.createdAt,

@@ -84,6 +84,7 @@ export default function AdminConfigPage() {
     instrutor: '',
     categoria: '',
     preco: '',
+    nivel: 'iniciante',
     modulosSelecionados: [] as number[],
   })
 
@@ -273,6 +274,7 @@ export default function AdminConfigPage() {
           instrutor: '',
           categoria: '',
           preco: '',
+          nivel: 'iniciante',
           modulosSelecionados: [],
         })
         toast({
@@ -646,6 +648,19 @@ export default function AdminConfigPage() {
                     value={novoCurso.preco}
                     onChange={(e) => setNovoCurso({...novoCurso, preco: e.target.value})}
                   />
+                  <div className="space-y-2">
+                    <Label htmlFor="nivel">Nível do Curso</Label>
+                    <select
+                      id="nivel"
+                      value={novoCurso.nivel}
+                      onChange={(e) => setNovoCurso({...novoCurso, nivel: e.target.value})}
+                      className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                    >
+                      <option value="iniciante">Iniciante</option>
+                      <option value="intermediario">Intermediário</option>
+                      <option value="avancado">Avançado</option>
+                    </select>
+                  </div>
                   <div className="space-y-2">
                       <p className="font-medium text-sm">Vincular Módulos</p>
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
