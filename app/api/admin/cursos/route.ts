@@ -40,16 +40,8 @@ export async function GET(req: NextRequest) {
     // Buscar todos os cursos
     const cursos = await prisma.curso.findMany({
       include: {
-        modulos: {
-          include: {
-            modulo: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
-          },
-        },
+        categoria: true,
+        modulos: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -62,13 +54,13 @@ export async function GET(req: NextRequest) {
         titulo: curso.titulo,
         descricao: curso.descricao,
         instrutor: curso.instrutor,
-        categoria: curso.categoria,
+        categoria: curso.categoria.nome,
         preco: curso.preco,
         nivel: curso.nivel,
         status: curso.status,
         thumbnail: curso.thumbnail,
         dataLancamento: curso.createdAt,
-        modulos: curso.modulos.map(m => m.modulo.id),
+        modulos: curso.modulos.map(m => m.id),
       })),
     });
   } catch (error) {
@@ -132,44 +124,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Buscar ou criar categoria
+    let categoriaObj = await prisma.categoria.findFirst({
+      where: { nome: categoria || 'Geral' }
+    });
+
+    if (!categoriaObj) {
+      categoriaObj = await prisma.categoria.create({
+        data: {
+          nome: categoria || 'Geral',
+          cor: '#3B82F6',
+          icone: 'BookOpen'
+        }
+      });
+    }
+
     // Criar novo curso
     const novoCurso = await prisma.curso.create({
       data: {
         titulo,
         descricao,
         instrutor,
-        categoria: categoria || 'Geral',
-        preco: preco ? parseFloat(preco) : 0,
+        categoriaId: categoriaObj.id,
+        preco: preco ? parseFloat(preco.toString()) : null,
         nivel: nivel || 'iniciante',
-        status: 'ativo',
+        status: 'publicado',
       },
     });
 
     // Vincular módulos se fornecidos
     if (modulosSelecionados && modulosSelecionados.length > 0) {
-      await prisma.cursoModulo.createMany({
-        data: modulosSelecionados.map((moduloId: string, index: number) => ({
-          cursoId: novoCurso.id,
-          moduloId,
-          ordem: index + 1,
-        })),
+      // Verificar se os módulos existem
+      const modulosExistentes = await prisma.modulo.findMany({
+        where: {
+          id: { in: modulosSelecionados }
+        }
       });
+
+      if (modulosExistentes.length > 0) {
+        // Atualizar os módulos para pertencerem a este curso
+        await prisma.modulo.updateMany({
+          where: {
+            id: { in: modulosExistentes.map(m => m.id) }
+          },
+          data: {
+            cursoId: novoCurso.id
+          }
+        });
+      }
     }
 
     // Buscar o curso criado com as relações
     const cursoCompleto = await prisma.curso.findUnique({
       where: { id: novoCurso.id },
       include: {
-        modulos: {
-          include: {
-            modulo: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
-          },
-        },
+        categoria: true,
+        modulos: true,
       },
     });
 
@@ -180,13 +190,13 @@ export async function POST(req: NextRequest) {
         titulo: cursoCompleto!.titulo,
         descricao: cursoCompleto!.descricao,
         instrutor: cursoCompleto!.instrutor,
-        categoria: cursoCompleto!.categoria,
+        categoria: cursoCompleto!.categoria.nome,
         preco: cursoCompleto!.preco,
         nivel: cursoCompleto!.nivel,
         status: cursoCompleto!.status,
         thumbnail: cursoCompleto!.thumbnail,
         dataLancamento: cursoCompleto!.createdAt,
-        modulos: cursoCompleto!.modulos.map(m => m.modulo.id),
+        modulos: cursoCompleto!.modulos.map(m => m.id),
       },
     });
   } catch (error) {
