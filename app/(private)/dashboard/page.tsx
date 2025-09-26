@@ -49,7 +49,7 @@ export default function DashboardPage() {
   ] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Curso | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false);
+  const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(true);
 
   // Carregar dados iniciais
   useEffect(() => {

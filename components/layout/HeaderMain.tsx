@@ -19,9 +19,7 @@ export function HeaderMain({
   onSidebarToggle,
 }: HeaderProps) {
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.user.user);
-
-  console.log("User role:", user?.role); 
+  const user = useSelector((state: RootState) => state?.user?.user);
 
   if (!user) return null;
 
@@ -50,7 +48,7 @@ export function HeaderMain({
 
           <Badge className="ml-3 bg-orange-100 text-orange-800">
             <Shield className="h-3 w-3 mr-1" />
-            Modo {user.role}
+            Modo {user?.role}
           </Badge>
       </div>
 
