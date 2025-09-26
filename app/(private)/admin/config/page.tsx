@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,100 +38,18 @@ import {
 } from '@/components/ui/dialog'
 import { useToast } from '@/components/ui/use-toast'
 
-// Mock Data
-const aulasSimuladas = [
-  {
-    id: 1,
-    titulo: 'Introdução ao Marketing Digital',
-    descricao:
-      'Conceitos fundamentais do marketing digital e sua importância no mundo atual.',
-    videoUrl: 'https://youtube.com/watch?v=abc123',
-    videoPlataforma: 'bunny',
-    duracao: '15:30',
-    arquivos: [
-      { id: 1, nome: 'Slides Introdução.pdf', tamanho: '2.5 MB', tipo: 'pdf' },
-      {
-        id: 2,
-        nome: 'Checklist Marketing.xlsx',
-        tamanho: '1.2 MB',
-        tipo: 'excel',
-      },
-    ],
-    modulosVinculados: [1, 2],
-  },
-  {
-    id: 2,
-    titulo: 'Definindo Personas',
-    descricao:
-      'Como criar personas detalhadas para suas campanhas de marketing.',
-    videoUrl: 'https://vimeo.com/123456789',
-    videoPlataforma: 'bunny',
-    duracao: '22:45',
-    arquivos: [
-      {
-        id: 3,
-        nome: 'Template Personas.docx',
-        tamanho: '800 KB',
-        tipo: 'word',
-      },
-    ],
-    modulosVinculados: [1],
-  },
-]
-
-const modulosSimulados = [
-  {
-    id: 1,
-    titulo: 'Fundamentos do Marketing',
-    descricao:
-      'Módulo introdutório sobre os conceitos básicos do marketing digital.',
-    aulas: [1, 2],
-    cursosVinculados: [1, 2],
-    ordem: 1,
-  },
-  {
-    id: 2,
-    titulo: 'Estratégias Avançadas',
-    descricao: 'Técnicas avançadas para otimizar suas campanhas de marketing.',
-    aulas: [1],
-    cursosVinculados: [1],
-    ordem: 2,
-  },
-]
-
-const cursosSimulados = [
-  {
-    id: 1,
-    titulo: 'Marketing Digital Completo',
-    descricao: 'Curso completo de marketing digital do básico ao avançado.',
-    instrutor: 'João Silva',
-    categoria: 'Marketing',
-    preco: 297,
-    status: 'ativo',
-    modulos: [1, 2],
-    thumbnail: '/placeholder.svg?height=100&width=150',
-    dataLancamento: '2024-01-15',
-  },
-  {
-    id: 2,
-    titulo: 'Fundamentos de Marketing',
-    descricao: 'Curso básico para iniciantes em marketing digital.',
-    instrutor: 'Maria Santos',
-    categoria: 'Marketing',
-    preco: 197,
-    status: 'ativo',
-    modulos: [1],
-    thumbnail: '/placeholder.svg?height=100&width=150',
-    dataLancamento: '2024-02-01',
-  },
-]
-
 type PaymentPlatform = 'stripe' | 'ticto'
 
 export default function AdminConfigPage() {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('course-management')
   const [courseManagementTab, setCourseManagementTab] = useState('aulas')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // State for data
+  const [aulas, setAulas] = useState<any[]>([])
+  const [modulos, setModulos] = useState<any[]>([])
+  const [cursos, setCursos] = useState<any[]>([])
 
   // State for Streaming
   const [bunnyApiKey, setBunnyApiKey] = useState('')
@@ -167,6 +85,217 @@ export default function AdminConfigPage() {
     preco: '',
     modulosSelecionados: [] as number[],
   })
+
+  // Carregar dados ao montar o componente
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Carregar aulas
+      const aulasResponse = await fetch('/api/admin/aulas')
+      if (aulasResponse.ok) {
+        const aulasData = await aulasResponse.json()
+        setAulas(aulasData.aulas || [])
+      }
+
+      // Carregar módulos
+      const modulosResponse = await fetch('/api/admin/modulos')
+      if (modulosResponse.ok) {
+        const modulosData = await modulosResponse.json()
+        setModulos(modulosData.modulos || [])
+      }
+
+      // Carregar cursos
+      const cursosResponse = await fetch('/api/admin/cursos')
+      if (cursosResponse.ok) {
+        const cursosData = await cursosResponse.json()
+        setCursos(cursosData.cursos || [])
+      }
+
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dados da plataforma",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSalvarAula = async () => {
+    if (!novaAula.titulo || !novaAula.descricao) {
+      toast({
+        title: "Erro",
+        description: "Título e descrição são obrigatórios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/admin/aulas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novaAula),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAulas(prev => [data.aula, ...prev])
+        setNovaAula({
+          titulo: '',
+          descricao: '',
+          videoUrl: '',
+          videoPlataforma: 'bunny',
+        })
+        toast({
+          title: "Sucesso",
+          description: "Aula criada com sucesso!",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Erro",
+          description: error.error || "Erro ao criar aula",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao criar aula:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar aula",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSalvarModulo = async () => {
+    if (!novoModulo.titulo || !novoModulo.descricao) {
+      toast({
+        title: "Erro",
+        description: "Título e descrição são obrigatórios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/admin/modulos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...novoModulo,
+          aulasSelecionadas: novoModulo.aulasSelecionadas,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setModulos(prev => [data.modulo, ...prev])
+        setNovoModulo({
+          titulo: '',
+          descricao: '',
+          aulasSelecionadas: [],
+        })
+        toast({
+          title: "Sucesso",
+          description: "Módulo criado com sucesso!",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Erro",
+          description: error.error || "Erro ao criar módulo",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao criar módulo:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar módulo",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSalvarCurso = async () => {
+    if (!novoCurso.titulo || !novoCurso.descricao || !novoCurso.instrutor) {
+      toast({
+        title: "Erro",
+        description: "Título, descrição e instrutor são obrigatórios",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/admin/cursos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...novoCurso,
+          modulosSelecionados: novoCurso.modulosSelecionados,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCursos(prev => [data.curso, ...prev])
+        setNovoCurso({
+          titulo: '',
+          descricao: '',
+          instrutor: '',
+          categoria: '',
+          preco: '',
+          modulosSelecionados: [],
+        })
+        toast({
+          title: "Sucesso",
+          description: "Curso criado com sucesso!",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Erro",
+          description: error.error || "Erro ao criar curso",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao criar curso:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar curso",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleSaveBunnyKey = () => {
     if (bunnyApiKey.trim()) {
@@ -293,7 +422,7 @@ export default function AdminConfigPage() {
                 </Button>
               </div>
               <div className="space-y-4">
-                {aulasSimuladas.map((aula) => (
+                {aulas.map((aula) => (
                   <Card key={aula.id}>
                     <CardContent className="p-4 flex items-start gap-4">
                       <div className="w-24 h-16 bg-gray-100 rounded flex items-center justify-center">
@@ -308,9 +437,9 @@ export default function AdminConfigPage() {
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">{aula.descricao}</p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {aula.arquivos.map(arq => (
+                          {aula.arquivos?.map((arq: any) => (
                             <Badge key={arq.id} variant="outline">{getFileIcon(arq.tipo)} {arq.nome}</Badge>
-                          ))}
+                          )) || []}
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
@@ -327,14 +456,38 @@ export default function AdminConfigPage() {
                   <CardTitle>Adicionar Nova Aula</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Título da Aula" />
-                  <Textarea placeholder="Descrição da Aula" />
-                  <Input placeholder="URL do Vídeo (Bunny.net)" />
+                  <Input 
+                    placeholder="Título da Aula" 
+                    value={novaAula.titulo}
+                    onChange={(e) => setNovaAula({...novaAula, titulo: e.target.value})}
+                  />
+                  <Textarea 
+                    placeholder="Descrição da Aula" 
+                    value={novaAula.descricao}
+                    onChange={(e) => setNovaAula({...novaAula, descricao: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="URL do Vídeo (Bunny.net)" 
+                    value={novaAula.videoUrl}
+                    onChange={(e) => setNovaAula({...novaAula, videoUrl: e.target.value})}
+                  />
                   <div className="border-2 border-dashed rounded-lg p-6 text-center">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                     <p className="mt-2 text-sm text-muted-foreground">Arraste e solte arquivos ou clique para enviar</p>
                   </div>
-                  <Button><Save className="h-4 w-4 mr-2" />Salvar Aula</Button>
+                  <Button onClick={handleSalvarAula} disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Salvando...
+                      </div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar Aula
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -349,14 +502,14 @@ export default function AdminConfigPage() {
                 </Button>
               </div>
               <div className="space-y-4">
-                  {modulosSimulados.map(modulo => (
+                  {modulos.map(modulo => (
                       <Card key={modulo.id}>
                           <CardContent className="p-4 flex items-center gap-4">
                               <div className="p-3 bg-blue-100 rounded-lg"><Folder className="h-6 w-6 text-blue-600" /></div>
                               <div className="flex-grow">
                                   <h4 className="font-semibold text-lg">{modulo.titulo}</h4>
                                   <p className="text-sm text-muted-foreground">{modulo.descricao}</p>
-                                  <p className="text-xs text-muted-foreground mt-1">{modulo.aulas.length} aulas</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{modulo.aulas?.length || 0} aulas</p>
                               </div>
                               <div className="flex gap-2">
                                   <Button variant="outline" size="sm"><Edit3 className="h-4 w-4" /></Button>
@@ -371,20 +524,56 @@ export default function AdminConfigPage() {
                   <CardTitle>Adicionar Novo Módulo</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Título do Módulo" />
-                  <Textarea placeholder="Descrição do Módulo" />
+                  <Input 
+                    placeholder="Título do Módulo" 
+                    value={novoModulo.titulo}
+                    onChange={(e) => setNovoModulo({...novoModulo, titulo: e.target.value})}
+                  />
+                  <Textarea 
+                    placeholder="Descrição do Módulo" 
+                    value={novoModulo.descricao}
+                    onChange={(e) => setNovoModulo({...novoModulo, descricao: e.target.value})}
+                  />
                   <div className="space-y-2">
                       <p className="font-medium text-sm">Vincular Aulas</p>
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
-                          {aulasSimuladas.map(aula => (
+                          {aulas.map(aula => (
                               <div key={aula.id} className="flex items-center gap-2">
-                                  <Checkbox id={`aula-${aula.id}`} />
+                                  <Checkbox 
+                                    id={`aula-${aula.id}`} 
+                                    checked={novoModulo.aulasSelecionadas.includes(aula.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setNovoModulo({
+                                          ...novoModulo,
+                                          aulasSelecionadas: [...novoModulo.aulasSelecionadas, aula.id]
+                                        })
+                                      } else {
+                                        setNovoModulo({
+                                          ...novoModulo,
+                                          aulasSelecionadas: novoModulo.aulasSelecionadas.filter(id => id !== aula.id)
+                                        })
+                                      }
+                                    }}
+                                  />
                                   <label htmlFor={`aula-${aula.id}`} className="text-sm">{aula.titulo}</label>
                               </div>
                           ))}
                       </div>
                   </div>
-                  <Button><Save className="h-4 w-4 mr-2" />Salvar Módulo</Button>
+                  <Button onClick={handleSalvarModulo} disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Salvando...
+                      </div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar Módulo
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -399,7 +588,7 @@ export default function AdminConfigPage() {
                 </Button>
               </div>
               <div className="space-y-4">
-                  {cursosSimulados.map(curso => (
+                  {cursos.map(curso => (
                       <Card key={curso.id}>
                           <CardContent className="p-4 flex items-start gap-4">
                               <Image src={curso.thumbnail || "/placeholder.svg"} alt={curso.titulo} width={120} height={80} className="rounded-md object-cover" />
@@ -423,22 +612,72 @@ export default function AdminConfigPage() {
                   <CardTitle>Adicionar Novo Curso</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Input placeholder="Título do Curso" />
-                  <Textarea placeholder="Descrição do Curso" />
-                  <Input placeholder="Nome do Instrutor" />
-                  <Input type="number" placeholder="Preço (ex: 297.00)" />
+                  <Input 
+                    placeholder="Título do Curso" 
+                    value={novoCurso.titulo}
+                    onChange={(e) => setNovoCurso({...novoCurso, titulo: e.target.value})}
+                  />
+                  <Textarea 
+                    placeholder="Descrição do Curso" 
+                    value={novoCurso.descricao}
+                    onChange={(e) => setNovoCurso({...novoCurso, descricao: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="Nome do Instrutor" 
+                    value={novoCurso.instrutor}
+                    onChange={(e) => setNovoCurso({...novoCurso, instrutor: e.target.value})}
+                  />
+                  <Input 
+                    placeholder="Categoria" 
+                    value={novoCurso.categoria}
+                    onChange={(e) => setNovoCurso({...novoCurso, categoria: e.target.value})}
+                  />
+                  <Input 
+                    type="number" 
+                    placeholder="Preço (ex: 297.00)" 
+                    value={novoCurso.preco}
+                    onChange={(e) => setNovoCurso({...novoCurso, preco: e.target.value})}
+                  />
                   <div className="space-y-2">
                       <p className="font-medium text-sm">Vincular Módulos</p>
                       <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
-                          {modulosSimulados.map(modulo => (
+                          {modulos.map(modulo => (
                               <div key={modulo.id} className="flex items-center gap-2">
-                                  <Checkbox id={`modulo-${modulo.id}`} />
+                                  <Checkbox 
+                                    id={`modulo-${modulo.id}`} 
+                                    checked={novoCurso.modulosSelecionados.includes(modulo.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setNovoCurso({
+                                          ...novoCurso,
+                                          modulosSelecionados: [...novoCurso.modulosSelecionados, modulo.id]
+                                        })
+                                      } else {
+                                        setNovoCurso({
+                                          ...novoCurso,
+                                          modulosSelecionados: novoCurso.modulosSelecionados.filter(id => id !== modulo.id)
+                                        })
+                                      }
+                                    }}
+                                  />
                                   <label htmlFor={`modulo-${modulo.id}`} className="text-sm">{modulo.titulo}</label>
                               </div>
                           ))}
                       </div>
                   </div>
-                  <Button><Save className="h-4 w-4 mr-2" />Salvar Curso</Button>
+                  <Button onClick={handleSalvarCurso} disabled={isLoading}>
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Salvando...
+                      </div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar Curso
+                      </>
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
