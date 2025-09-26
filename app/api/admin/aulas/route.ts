@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
         videoUrl: aula.videoUrl,
         videoPlataforma: aula.videoPlataforma,
         duracao: aula.duracao,
+        ordem: aula.ordem,
         arquivos: aula.arquivos,
         modulosVinculados: aula.modulos.map(m => m.modulo.id),
       })),
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { titulo, descricao, videoUrl, videoPlataforma, duracao } = await req.json();
+    const { titulo, descricao, videoUrl, videoPlataforma, duracao, ordem } = await req.json();
 
     if (!titulo || !descricao) {
       return NextResponse.json(
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
         videoUrl: videoUrl || null,
         videoPlataforma: videoPlataforma || 'bunny',
         duracao: duracao || null,
+        ordem: ordem || 1,
       },
       include: {
         arquivos: true,
@@ -155,6 +157,7 @@ export async function POST(req: NextRequest) {
         videoUrl: novaAula.videoUrl,
         videoPlataforma: novaAula.videoPlataforma,
         duracao: novaAula.duracao,
+        ordem: novaAula.ordem,
         arquivos: novaAula.arquivos,
         modulosVinculados: novaAula.modulos.map(m => m.modulo.id),
       },

@@ -71,6 +71,7 @@ export default function AdminConfigPage() {
     descricao: '',
     videoUrl: '',
     videoPlataforma: 'bunny',
+    ordem: '',
   })
   const [novoModulo, setNovoModulo] = useState({
     titulo: '',
@@ -157,6 +158,7 @@ export default function AdminConfigPage() {
           descricao: '',
           videoUrl: '',
           videoPlataforma: 'bunny',
+          ordem: '',
         })
         toast({
           title: "Sucesso",
@@ -470,6 +472,12 @@ export default function AdminConfigPage() {
                     placeholder="URL do Vídeo (Bunny.net)" 
                     value={novaAula.videoUrl}
                     onChange={(e) => setNovaAula({...novaAula, videoUrl: e.target.value})}
+                  />
+                  <Input 
+                    type="number" 
+                    placeholder="Ordem da Aula (ex: 1, 2, 3...)" 
+                    value={novaAula.ordem}
+                    onChange={(e) => setNovaAula({...novaAula, ordem: e.target.value})}
                   />
                   <div className="border-2 border-dashed rounded-lg p-6 text-center">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
