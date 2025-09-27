@@ -15,13 +15,12 @@ export async function GET(req: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário é admin
@@ -37,30 +36,33 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Buscar todos os cursos
+    // Buscar todos os cursos com categorias, módulos e instrutores
     const cursos = await prisma.curso.findMany({
       include: {
         categoria: true,
         modulos: true,
+        instrutores: {
+          include: { instrutor: true },
+        },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json({
-      cursos: cursos.map(curso => ({
+      cursos: cursos.map((curso) => ({
         id: curso.id,
         titulo: curso.titulo,
         descricao: curso.descricao,
-        instrutor: curso.instrutor,
         categoria: curso.categoria.nome,
+        instrutores: curso.instrutores.map((ci) => ci.instrutor.nome),
         preco: curso.preco,
         nivel: curso.nivel,
         status: curso.status,
         thumbnail: curso.thumbnail,
         dataLancamento: curso.createdAt,
-        modulos: curso.modulos.map(m => m.id),
+        modulos: curso.modulos.map((m) => m.id),
       })),
     });
   } catch (error) {
@@ -85,13 +87,12 @@ export async function POST(req: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário é admin
@@ -107,98 +108,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { titulo, descricao, instrutor, categoria, preco, nivel, modulosSelecionados } = await req.json();
+    type CursoRequest = {
+      titulo: string;
+      descricao: string;
+      categoriaId: string;
+      instrutoresIds: string[];
+      preco?: number;
+      nivel: string;
+      status?: string;
+      thumbnail?: string;
+    };
 
-    if (!titulo || !descricao || !instrutor) {
+    const {
+      titulo,
+      descricao,
+      categoriaId,
+      instrutoresIds,
+      preco,
+      nivel,
+      status,
+      thumbnail,
+    }: CursoRequest = await req.json();
+
+    if (
+      !titulo ||
+      !descricao ||
+      !categoriaId ||
+      !instrutoresIds?.length ||
+      !nivel
+    ) {
       return NextResponse.json(
-        { error: "Título, descrição e instrutor são obrigatórios" },
+        {
+          error:
+            "Título, descrição, categoria, nível e pelo menos 1 instrutor são obrigatórios",
+        },
         { status: 400 }
       );
     }
 
-    // Validar nível se fornecido
-    if (nivel && !['iniciante', 'intermediario', 'avancado'].includes(nivel)) {
-      return NextResponse.json(
-        { error: "Nível deve ser: iniciante, intermediario ou avancado" },
-        { status: 400 }
-      );
-    }
-
-    // Buscar ou criar categoria
-    let categoriaObj = await prisma.categoria.findFirst({
-      where: { nome: categoria || 'Geral' }
-    });
-
-    if (!categoriaObj) {
-      categoriaObj = await prisma.categoria.create({
-        data: {
-          nome: categoria || 'Geral',
-          cor: '#3B82F6',
-          icone: 'BookOpen'
-        }
-      });
-    }
-
-    // Criar novo curso
     const novoCurso = await prisma.curso.create({
       data: {
         titulo,
         descricao,
-        instrutor,
-        categoriaId: categoriaObj.id,
-        preco: preco ? parseFloat(preco.toString()) : null,
-        nivel: nivel || 'iniciante',
-        status: 'publicado',
+        nivel,
+        categoria: { connect: { id: categoriaId } },
+        preco,
+        status: status ?? "rascunho",
+        thumbnail,
+        instrutores: {
+          create: instrutoresIds.map((id) => ({
+            instrutor: { connect: { id } },
+          })),
+        },
       },
     });
 
-    // Vincular módulos se fornecidos
-    if (modulosSelecionados && modulosSelecionados.length > 0) {
-      // Verificar se os módulos existem
-      const modulosExistentes = await prisma.modulo.findMany({
-        where: {
-          id: { in: modulosSelecionados }
-        }
-      });
-
-      if (modulosExistentes.length > 0) {
-        // Atualizar os módulos para pertencerem a este curso
-        await prisma.modulo.updateMany({
-          where: {
-            id: { in: modulosExistentes.map(m => m.id) }
-          },
-          data: {
-            cursoId: novoCurso.id
-          }
-        });
-      }
-    }
-
-    // Buscar o curso criado com as relações
-    const cursoCompleto = await prisma.curso.findUnique({
-      where: { id: novoCurso.id },
-      include: {
-        categoria: true,
-        modulos: true,
-      },
-    });
-
-    return NextResponse.json({
-      message: "Curso criado com sucesso",
-      curso: {
-        id: cursoCompleto!.id,
-        titulo: cursoCompleto!.titulo,
-        descricao: cursoCompleto!.descricao,
-        instrutor: cursoCompleto!.instrutor,
-        categoria: cursoCompleto!.categoria.nome,
-        preco: cursoCompleto!.preco,
-        nivel: cursoCompleto!.nivel,
-        status: cursoCompleto!.status,
-        thumbnail: cursoCompleto!.thumbnail,
-        dataLancamento: cursoCompleto!.createdAt,
-        modulos: cursoCompleto!.modulos.map(m => m.id),
-      },
-    });
+    return NextResponse.json({ curso: novoCurso });
   } catch (error) {
     console.error("Erro ao criar curso:", error);
     return NextResponse.json(

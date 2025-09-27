@@ -1,10 +1,14 @@
 {
+  "/api/auth/logout/route": "app/api/auth/logout/route.js",
   "/api/auth/login/route": "app/api/auth/login/route.js",
   "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/usuarios/meus-cursos/route": "app/api/usuarios/meus-cursos/route.js",
   "/api/cursos/route": "app/api/cursos/route.js",
   "/api/favoritos/route": "app/api/favoritos/route.js",
-  "/api/usuarios/meus-cursos/route": "app/api/usuarios/meus-cursos/route.js",
-  "/page": "app/page.js",
+  "/api/admin/aulas/route": "app/api/admin/aulas/route.js",
+  "/api/admin/modulos/route": "app/api/admin/modulos/route.js",
+  "/api/admin/cursos/route": "app/api/admin/cursos/route.js",
   "/(public)/login/page": "app/(public)/login/page.js",
-  "/(private)/dashboard/page": "app/(private)/dashboard/page.js"
+  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
+  "/(private)/admin/config/page": "app/(private)/admin/config/page.js"
 }
