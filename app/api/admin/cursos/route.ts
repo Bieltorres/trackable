@@ -36,18 +36,15 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Buscar todos os cursos com categorias, módulos e instrutores
+    // Buscar todos os cursos com relacionamentos
     const cursos = await prisma.curso.findMany({
       include: {
         categoria: true,
-        modulos: true,
-        instrutores: {
-          include: { instrutor: true },
-        },
+        cursoModulos: { include: { modulo: true } },
+        instrutores: { include: { instrutor: true } },
+        usuarioCursos: true, // 🔥 para contar alunos
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json({
@@ -55,20 +52,25 @@ export async function GET(req: NextRequest) {
         id: curso.id,
         titulo: curso.titulo,
         descricao: curso.descricao,
-        categoria: curso.categoria.nome,
-        instrutores: curso.instrutores.map((ci) => ci.instrutor.nome),
+        categoria: curso.categoria?.nome,
+        instrutores: curso.instrutores.map((ci) => ci.instrutor.nome) || [],
         preco: curso.preco,
         nivel: curso.nivel,
         status: curso.status,
         thumbnail: curso.thumbnail,
         dataLancamento: curso.createdAt,
-        modulos: curso.modulos.map((m) => m.id),
+        modulos: curso.cursoModulos.map((cm) => ({
+          id: cm.modulo.id,
+          titulo: cm.modulo.titulo,
+        })),
+        totalModulos: curso.cursoModulos.length,
+        totalAlunos: curso.usuarioCursos.length,
       })),
     });
   } catch (error) {
     console.error("Erro ao buscar cursos:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno ao buscar cursos" },
       { status: 500 }
     );
   }
@@ -76,7 +78,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Verificar token de autenticação
     const token = req.cookies.get("token")?.value;
     if (!token) {
       return NextResponse.json(
@@ -91,11 +92,10 @@ export async function POST(req: NextRequest) {
         sub: string;
       };
       userId = decoded.sub;
-    } catch (error) {
+    } catch {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    // Verificar se o usuário é admin
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { role: true },
@@ -113,6 +113,7 @@ export async function POST(req: NextRequest) {
       descricao: string;
       categoriaId: string;
       instrutoresIds: string[];
+      modulosSelecionados?: string[]; // 🔥 novo
       preco?: number;
       nivel: string;
       status?: string;
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
       descricao,
       categoriaId,
       instrutoresIds,
+      modulosSelecionados = [], // 🔥 novo
       preco,
       nivel,
       status,
@@ -160,6 +162,14 @@ export async function POST(req: NextRequest) {
             instrutor: { connect: { id } },
           })),
         },
+        // 🔥 cria vínculos na tabela pivot
+        cursoModulos: modulosSelecionados.length
+          ? {
+              create: modulosSelecionados.map((id) => ({
+                modulo: { connect: { id } },
+              })),
+            }
+          : undefined,
       },
     });
 
@@ -167,7 +177,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("Erro ao criar curso:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno ao criar curso" },
       { status: 500 }
     );
   }

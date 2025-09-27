@@ -1,126 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import jwt from "jsonwebtoken";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    // Verificar token de autenticação
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { error: "Token de autenticação não encontrado" },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
-      userId = decoded.sub;
-    } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
-    }
-
-    // Verificar se o usuário é admin
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Acesso negado. Apenas administradores podem acessar." },
-        { status: 403 }
-      );
-    }
-
-    // Buscar todos os módulos
     const modulos = await prisma.modulo.findMany({
       include: {
-        aulas: {
+        // retornar os vínculos módulo↔aula com a aula aninhada (e arquivos da aula)
+        aulaModulos: {
           include: {
             aula: {
-              select: {
-                id: true,
-                titulo: true,
+              include: {
+                arquivos: true,
               },
             },
           },
         },
-        cursos: {
+        // manter cursos vinculados
+        cursoModulos: {
           include: {
-            curso: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
+            curso: true,
           },
         },
       },
       orderBy: {
-        ordem: 'asc',
+        createdAt: "desc",
       },
     });
 
-    return NextResponse.json({
-      modulos: modulos.map(modulo => ({
-        id: modulo.id,
-        titulo: modulo.titulo,
-        descricao: modulo.descricao,
-        ordem: modulo.ordem,
-        aulas: modulo.aulas.map(a => a.aula.id),
-        cursosVinculados: modulo.cursos.map(c => c.curso.id),
-      })),
-    });
-  } catch (error) {
+    return NextResponse.json({ modulos }, { status: 200 });
+  } catch (error: any) {
     console.error("Erro ao buscar módulos:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno ao buscar módulos" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    // Verificar token de autenticação
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { error: "Token de autenticação não encontrado" },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
-      userId = decoded.sub;
-    } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
-    }
-
-    // Verificar se o usuário é admin
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Acesso negado. Apenas administradores podem acessar." },
-        { status: 403 }
-      );
-    }
-
-    const { titulo, descricao, aulasSelecionadas, ordem } = await req.json();
+    const body = await req.json();
+    const { titulo, descricao, ordem, aulasSelecionadas, cursosSelecionados } =
+      body;
 
     if (!titulo || !descricao) {
       return NextResponse.json(
@@ -129,68 +50,72 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Criar novo módulo
+    const ordemNumero = Number(ordem);
+    if (isNaN(ordemNumero)) {
+      return NextResponse.json(
+        { error: "A ordem precisa ser um número válido" },
+        { status: 400 }
+      );
+    }
+
+    if (!cursosSelecionados || cursosSelecionados.length === 0) {
+      return NextResponse.json(
+        { error: "É necessário vincular pelo menos um curso" },
+        { status: 400 }
+      );
+    }
+
+    // cria o módulo
     const novoModulo = await prisma.modulo.create({
       data: {
         titulo,
         descricao,
-        ordem: ordem || 1,
+        ordem: ordemNumero,
       },
     });
 
-    // Vincular aulas se fornecidas
-    if (aulasSelecionadas && aulasSelecionadas.length > 0) {
+    // cria vínculos AulaModulo (se houver)
+    if (aulasSelecionadas?.length) {
+      const aulaModuloData = aulasSelecionadas.map((aulaId: string) => ({
+        aulaId,
+        moduloId: novoModulo.id,
+      }));
       await prisma.aulaModulo.createMany({
-        data: aulasSelecionadas.map((aulaId: string, index: number) => ({
-          aulaId,
-          moduloId: novoModulo.id,
-          ordem: index + 1,
-        })),
+        data: aulaModuloData,
+        skipDuplicates: true,
       });
     }
 
-    // Buscar o módulo criado com as relações
-    const moduloCompleto = await prisma.modulo.findUnique({
+    // cria vínculos CursoModulo
+    const cursoModuloData = cursosSelecionados.map((cursoId: string) => ({
+      cursoId,
+      moduloId: novoModulo.id,
+    }));
+    await prisma.cursoModulo.createMany({
+      data: cursoModuloData,
+      skipDuplicates: true,
+    });
+
+    // busca o módulo com relacionamentos já populados
+    const moduloComCursos = await prisma.modulo.findUnique({
       where: { id: novoModulo.id },
       include: {
-        aulas: {
+        aulaModulos: {
           include: {
-            aula: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
+            aula: { include: { arquivos: true } },
           },
         },
-        cursos: {
-          include: {
-            curso: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
-          },
+        cursoModulos: {
+          include: { curso: true },
         },
       },
     });
 
-    return NextResponse.json({
-      message: "Módulo criado com sucesso",
-      modulo: {
-        id: moduloCompleto!.id,
-        titulo: moduloCompleto!.titulo,
-        descricao: moduloCompleto!.descricao,
-        ordem: moduloCompleto!.ordem,
-        aulas: moduloCompleto!.aulas.map(a => a.aula.id),
-        cursosVinculados: moduloCompleto!.cursos.map(c => c.curso.id),
-      },
-    });
-  } catch (error) {
+    return NextResponse.json({ modulo: moduloComCursos }, { status: 201 });
+  } catch (error: any) {
     console.error("Erro ao criar módulo:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno ao criar módulo" },
       { status: 500 }
     );
   }

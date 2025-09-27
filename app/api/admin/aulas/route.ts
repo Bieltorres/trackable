@@ -15,13 +15,12 @@ export async function GET(req: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário é admin
@@ -38,36 +37,31 @@ export async function GET(req: NextRequest) {
     }
 
     // Buscar todas as aulas
+    // GET
     const aulas = await prisma.aula.findMany({
       include: {
         arquivos: true,
-        modulos: {
+        aulaModulos: {
           include: {
             modulo: {
-              select: {
-                id: true,
-                titulo: true,
-              },
+              select: { id: true, titulo: true },
             },
           },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { ordem: "asc" },
     });
 
     return NextResponse.json({
-      aulas: aulas.map(aula => ({
+      aulas: aulas.map((aula) => ({
         id: aula.id,
         titulo: aula.titulo,
         descricao: aula.descricao,
         videoUrl: aula.videoUrl,
-        videoPlataforma: aula.videoPlataforma,
         duracao: aula.duracao,
         ordem: aula.ordem,
         arquivos: aula.arquivos,
-        modulosVinculados: aula.modulos.map(m => m.modulo.id),
+        modulosVinculados: aula.aulaModulos.map((am) => am.modulo.id), // 👈 corrigido
       })),
     });
   } catch (error) {
@@ -92,13 +86,12 @@ export async function POST(req: NextRequest) {
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário é admin
@@ -114,7 +107,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { titulo, descricao, videoUrl, videoPlataforma, duracao, ordem } = await req.json();
+    const {
+      titulo,
+      descricao,
+      videoUrl,
+      duracao,
+      ordem,
+      modulosSelecionados,
+      arquivos,
+    } = await req.json();
 
     if (!titulo || !descricao) {
       return NextResponse.json(
@@ -129,20 +130,33 @@ export async function POST(req: NextRequest) {
         titulo,
         descricao,
         videoUrl: videoUrl || null,
-        videoPlataforma: videoPlataforma || 'bunny',
         duracao: duracao || null,
-        ordem: ordem || 1,
+        ordem: ordem ? Number(ordem) : 1,
+
+        aulaModulos: modulosSelecionados?.length
+          ? {
+              create: modulosSelecionados.map((moduloId: string) => ({
+                modulo: { connect: { id: moduloId } },
+              })),
+            }
+          : undefined,
+
+        arquivos: arquivos?.length
+          ? {
+              create: arquivos.map((arq: any) => ({
+                nome: arq.nome,
+                tipo: arq.tipo,
+                url: arq.url,
+              })),
+            }
+          : undefined,
       },
       include: {
         arquivos: true,
-        modulos: {
+        aulaModulos: {
+          // 👈 corrigido
           include: {
-            modulo: {
-              select: {
-                id: true,
-                titulo: true,
-              },
-            },
+            modulo: { select: { id: true, titulo: true } },
           },
         },
       },
@@ -155,11 +169,10 @@ export async function POST(req: NextRequest) {
         titulo: novaAula.titulo,
         descricao: novaAula.descricao,
         videoUrl: novaAula.videoUrl,
-        videoPlataforma: novaAula.videoPlataforma,
         duracao: novaAula.duracao,
         ordem: novaAula.ordem,
         arquivos: novaAula.arquivos,
-        modulosVinculados: novaAula.modulos.map(m => m.modulo.id),
+        modulosVinculados: novaAula.aulaModulos.map((m) => m.modulo.id), // 👈 corrigido
       },
     });
   } catch (error) {

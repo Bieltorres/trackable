@@ -15,17 +15,20 @@ export async function GET(req: NextRequest) {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-      if (decoded.role !== "admin") {
+
+      const user = await prisma.user.findUnique({
+        where: { email: decoded.email },
+        select: { role: true },
+      });
+
+      if (user?.role !== "admin") {
         return NextResponse.json(
           { error: "Acesso negado. Apenas administradores." },
           { status: 403 }
         );
       }
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     const categorias = await prisma.categoria.findMany({
@@ -57,17 +60,19 @@ export async function POST(req: NextRequest) {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-      if (decoded.role !== "admin") {
+      const user = await prisma.user.findUnique({
+        where: { email: decoded.email },
+        select: { role: true },
+      });
+
+      if (user?.role !== "admin") {
         return NextResponse.json(
           { error: "Acesso negado. Apenas administradores." },
           { status: 403 }
         );
       }
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     const { nome, cor, icone } = await req.json();

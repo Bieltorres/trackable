@@ -113,7 +113,7 @@ model Curso {
 
   // Relacionamentos
   categoria     Categoria        @relation(fields: [categoriaId], references: [id])
-  modulos       Modulo[]
+  cursoModulos CursoModulo[]
   instrutores CursoInstrutor[]
   usuarioCursos UsuarioCurso[]
   avaliacoes    CursoAvaliacao[]
@@ -125,29 +125,70 @@ model Curso {
 
 model Modulo {
   id      String @id @default(uuid())
-  cursoId String
   titulo  String
+  descricao String?
   ordem   Int
 
-  curso Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
-  aulas Aula[]
+  cursoModulos CursoModulo[]
+  aulaModulos  AulaModulo[] 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@map("modulos")
 }
 
+
+model CursoModulo {
+  cursoId  String
+  moduloId String
+  curso    Curso  @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  modulo   Modulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+
+  @@id([cursoId, moduloId])
+  @@map("curso_modulos")
+}
+
 model Aula {
   id       String  @id @default(uuid())
-  moduloId String
   titulo   String
   videoUrl String?
   ordem    Int
-  duracao  String? // ex: "15min"
+  duracao  String?
+  descricao String?
 
-  modulo            Modulo             @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  aulaModulos       AulaModulo[]
   usuarioCursoAulas UsuarioCursoAula[]
   anotacoes         Anotacao[]
+  arquivos          ArquivoAula[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@map("aulas")
+}
+
+model ArquivoAula {
+  id        String   @id @default(uuid())
+  nome      String
+  url       String
+  createdAt DateTime @default(now())
+
+  // Relação
+  aulaId String
+  aula   Aula   @relation(fields: [aulaId], references: [id])
+}
+
+model AulaModulo {
+  id       String @id @default(uuid())
+  aulaId   String
+  moduloId String
+
+  aula   Aula   @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  modulo Modulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+
+  @@unique([aulaId, moduloId])
+  @@map("aula_modulos")
 }
 
 model UsuarioCurso {

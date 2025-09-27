@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/api/auth/logout/route": [
+    "/api/admin/aulas/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/logout/route.js"
+      "static/chunks/app/api/admin/aulas/route.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -16,21 +16,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/error.js"
     ],
-    "/(public)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/layout.js"
-    ],
-    "/(public)/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(public)/login/page.js"
-    ],
-    "/api/auth/login/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/login/route.js"
-    ],
     "/(private)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -41,45 +26,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(private)/error.js"
     ],
-    "/(private)/dashboard/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(private)/dashboard/loading.js"
-    ],
-    "/(private)/dashboard/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(private)/dashboard/page.js"
-    ],
-    "/api/auth/me/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/auth/me/route.js"
-    ],
-    "/api/usuarios/meus-cursos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/usuarios/meus-cursos/route.js"
-    ],
-    "/api/cursos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/cursos/route.js"
-    ],
-    "/api/favoritos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/favoritos/route.js"
-    ],
     "/(private)/admin/config/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(private)/admin/config/page.js"
-    ],
-    "/api/admin/aulas/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/admin/aulas/route.js"
     ],
     "/api/admin/modulos/route": [
       "static/chunks/webpack.js",
@@ -90,6 +40,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/admin/cursos/route.js"
+    ],
+    "/api/admin/categorias/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/categorias/route.js"
+    ],
+    "/api/admin/instrutores/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/instrutores/route.js"
     ]
   }
 }
