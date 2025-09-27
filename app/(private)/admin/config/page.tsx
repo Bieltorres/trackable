@@ -50,6 +50,8 @@ export default function AdminConfigPage() {
   const [aulas, setAulas] = useState<any[]>([])
   const [modulos, setModulos] = useState<any[]>([])
   const [cursos, setCursos] = useState<any[]>([])
+  const [categorias, setCategorias] = useState<any[]>([])
+  const [instrutores, setInstrutores] = useState<any[]>([])
 
   // State for Streaming
   const [bunnyApiKey, setBunnyApiKey] = useState('')
@@ -81,12 +83,26 @@ export default function AdminConfigPage() {
   const [novoCurso, setNovoCurso] = useState({
     titulo: '',
     descricao: '',
-    instrutor: '',
-    categoria: '',
+    instrutoresIds: [] as string[],
+    categoriaId: '',
     preco: '',
     nivel: 'iniciante',
-    modulosSelecionados: [] as number[],
+    modulosSelecionados: [] as string[],
   })
+  const [novaCategoria, setNovaCategoria] = useState({
+    nome: '',
+    cor: '#3B82F6',
+    icone: 'BookOpen',
+  })
+  const [novoInstrutor, setNovoInstrutor] = useState({
+    nome: '',
+    bio: '',
+    avatar: '',
+  })
+
+  // State for modals
+  const [isCategoriaModalOpen, setIsCategoriaModalOpen] = useState(false)
+  const [isInstrutorModalOpen, setIsInstrutorModalOpen] = useState(false)
 
   // Carregar dados ao montar o componente
   useEffect(() => {
@@ -116,6 +132,20 @@ export default function AdminConfigPage() {
       if (cursosResponse.ok) {
         const cursosData = await cursosResponse.json()
         setCursos(cursosData.cursos || [])
+      }
+
+      // Carregar categorias
+      const categoriasResponse = await fetch('/api/admin/categorias')
+      if (categoriasResponse.ok) {
+        const categoriasData = await categoriasResponse.json()
+        setCategorias(categoriasData.categorias || [])
+      }
+
+      // Carregar instrutores
+      const instrutoresResponse = await fetch('/api/admin/instrutores')
+      if (instrutoresResponse.ok) {
+        const instrutoresData = await instrutoresResponse.json()
+        setInstrutores(instrutoresData.instrutores || [])
       }
 
     } catch (error) {
@@ -242,10 +272,10 @@ export default function AdminConfigPage() {
   }
 
   const handleSalvarCurso = async () => {
-    if (!novoCurso.titulo || !novoCurso.descricao || !novoCurso.instrutor) {
+    if (!novoCurso.titulo || !novoCurso.descricao || !novoCurso.categoriaId || novoCurso.instrutoresIds.length === 0) {
       toast({
         title: "Erro",
-        description: "Título, descrição e instrutor são obrigatórios",
+        description: "Título, descrição, categoria e pelo menos um instrutor são obrigatórios",
         variant: "destructive",
       })
       return
@@ -271,8 +301,8 @@ export default function AdminConfigPage() {
         setNovoCurso({
           titulo: '',
           descricao: '',
-          instrutor: '',
-          categoria: '',
+          instrutoresIds: [],
+          categoriaId: '',
           preco: '',
           nivel: 'iniciante',
           modulosSelecionados: [],
@@ -294,6 +324,114 @@ export default function AdminConfigPage() {
       toast({
         title: "Erro",
         description: "Erro ao criar curso",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSalvarCategoria = async () => {
+    if (!novaCategoria.nome) {
+      toast({
+        title: "Erro",
+        description: "Nome da categoria é obrigatório",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/admin/categorias', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novaCategoria),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setCategorias(prev => [data.categoria, ...prev])
+        setNovaCategoria({
+          nome: '',
+          cor: '#3B82F6',
+          icone: 'BookOpen',
+        })
+        setIsCategoriaModalOpen(false)
+        toast({
+          title: "Sucesso",
+          description: "Categoria criada com sucesso!",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Erro",
+          description: error.error || "Erro ao criar categoria",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao criar categoria:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar categoria",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSalvarInstrutor = async () => {
+    if (!novoInstrutor.nome) {
+      toast({
+        title: "Erro",
+        description: "Nome do instrutor é obrigatório",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/admin/instrutores', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(novoInstrutor),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setInstrutores(prev => [data.instrutor, ...prev])
+        setNovoInstrutor({
+          nome: '',
+          bio: '',
+          avatar: '',
+        })
+        setIsInstrutorModalOpen(false)
+        toast({
+          title: "Sucesso",
+          description: "Instrutor criado com sucesso!",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Erro",
+          description: error.error || "Erro ao criar instrutor",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao criar instrutor:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao criar instrutor",
         variant: "destructive",
       })
     } finally {
@@ -606,7 +744,13 @@ export default function AdminConfigPage() {
                                   <h4 className="font-semibold text-lg">{curso.titulo}</h4>
                                   <p className="text-sm text-muted-foreground">{curso.descricao}</p>
                                   <div className="text-xs text-muted-foreground mt-2">
-                                      <span>Instrutor: {curso.instrutor}</span> | <span>Preço: R$ {curso.preco}</span>
+                                      <span>Categoria: {curso.categoria?.nome}</span> | 
+                                      <span>Instrutores: {curso.instrutores?.map((ci: any) => ci.instrutor.nome).join(', ')}</span> | 
+                                      <span>Preço: R$ {curso.preco || 'Gratuito'}</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                      <span>{curso.modulos?.length || 0} módulos</span> | 
+                                      <span>{curso._count?.usuarioCursos || 0} alunos</span>
                                   </div>
                               </div>
                                <div className="flex flex-col gap-2">
@@ -632,16 +776,71 @@ export default function AdminConfigPage() {
                     value={novoCurso.descricao}
                     onChange={(e) => setNovoCurso({...novoCurso, descricao: e.target.value})}
                   />
-                  <Input 
-                    placeholder="Nome do Instrutor" 
-                    value={novoCurso.instrutor}
-                    onChange={(e) => setNovoCurso({...novoCurso, instrutor: e.target.value})}
-                  />
-                  <Input 
-                    placeholder="Categoria" 
-                    value={novoCurso.categoria}
-                    onChange={(e) => setNovoCurso({...novoCurso, categoria: e.target.value})}
-                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="categoria">Categoria</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsCategoriaModalOpen(true)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-1" />
+                        Nova
+                      </Button>
+                    </div>
+                    <select
+                      id="categoria"
+                      value={novoCurso.categoriaId}
+                      onChange={(e) => setNovoCurso({...novoCurso, categoriaId: e.target.value})}
+                      className="w-full px-3 py-2 border border-input bg-background rounded-md"
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {categorias.map(categoria => (
+                        <option key={categoria.id} value={categoria.id}>
+                          {categoria.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="instrutores">Instrutores</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsInstrutorModalOpen(true)}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-1" />
+                        Novo
+                      </Button>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-2">
+                      {instrutores.map(instrutor => (
+                        <div key={instrutor.id} className="flex items-center gap-2">
+                          <Checkbox 
+                            id={`instrutor-${instrutor.id}`} 
+                            checked={novoCurso.instrutoresIds.includes(instrutor.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setNovoCurso({
+                                  ...novoCurso,
+                                  instrutoresIds: [...novoCurso.instrutoresIds, instrutor.id]
+                                })
+                              } else {
+                                setNovoCurso({
+                                  ...novoCurso,
+                                  instrutoresIds: novoCurso.instrutoresIds.filter(id => id !== instrutor.id)
+                                })
+                              }
+                            }}
+                          />
+                          <label htmlFor={`instrutor-${instrutor.id}`} className="text-sm">{instrutor.nome}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   <Input 
                     type="number" 
                     placeholder="Preço (ex: 297.00)" 
@@ -939,6 +1138,90 @@ export default function AdminConfigPage() {
               Cancelar
             </Button>
             <Button onClick={handleConnectPaymentWebhook}>Conectar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Nova Categoria */}
+      <Dialog open={isCategoriaModalOpen} onOpenChange={setIsCategoriaModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Categoria</DialogTitle>
+            <DialogDescription>
+              Adicione uma nova categoria para os cursos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Nome da categoria"
+              value={novaCategoria.nome}
+              onChange={(e) => setNovaCategoria({...novaCategoria, nome: e.target.value})}
+            />
+            <div className="space-y-2">
+              <Label htmlFor="cor">Cor</Label>
+              <Input
+                id="cor"
+                type="color"
+                value={novaCategoria.cor}
+                onChange={(e) => setNovaCategoria({...novaCategoria, cor: e.target.value})}
+              />
+            </div>
+            <Input
+              placeholder="Ícone (ex: BookOpen, Video, Code)"
+              value={novaCategoria.icone}
+              onChange={(e) => setNovaCategoria({...novaCategoria, icone: e.target.value})}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCategoriaModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSalvarCategoria} disabled={isLoading}>
+              {isLoading ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Novo Instrutor */}
+      <Dialog open={isInstrutorModalOpen} onOpenChange={setIsInstrutorModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Instrutor</DialogTitle>
+            <DialogDescription>
+              Adicione um novo instrutor para os cursos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Nome do instrutor"
+              value={novoInstrutor.nome}
+              onChange={(e) => setNovoInstrutor({...novoInstrutor, nome: e.target.value})}
+            />
+            <Textarea
+              placeholder="Biografia do instrutor"
+              value={novoInstrutor.bio}
+              onChange={(e) => setNovoInstrutor({...novoInstrutor, bio: e.target.value})}
+            />
+            <Input
+              placeholder="URL do avatar"
+              value={novoInstrutor.avatar}
+              onChange={(e) => setNovoInstrutor({...novoInstrutor, avatar: e.target.value})}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsInstrutorModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSalvarInstrutor} disabled={isLoading}>
+              {isLoading ? "Salvando..." : "Salvar"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
