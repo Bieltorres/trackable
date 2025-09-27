@@ -148,6 +148,20 @@ export default function AdminConfigPage() {
         setInstrutores(instrutoresData.instrutores || [])
       }
 
+      // Carregar categorias
+      const categoriasResponse = await fetch('/api/admin/categorias')
+      if (categoriasResponse.ok) {
+        const categoriasData = await categoriasResponse.json()
+        setCategorias(categoriasData.categorias || [])
+      }
+
+      // Carregar instrutores
+      const instrutoresResponse = await fetch('/api/admin/instrutores')
+      if (instrutoresResponse.ok) {
+        const instrutoresData = await instrutoresResponse.json()
+        setInstrutores(instrutoresData.instrutores || [])
+      }
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error)
       toast({
