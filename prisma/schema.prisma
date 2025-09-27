@@ -74,13 +74,32 @@ model Categoria {
   @@map("categorias")
 }
 
+model Instrutor {
+  id        String   @id @default(uuid())
+  nome      String
+  bio       String?
+  avatar    String?
+  redesSociais Json?
+  cursos    CursoInstrutor[]
+  @@map("instrutores")
+}
+
+model CursoInstrutor {
+  cursoId     String
+  instrutorId String
+  curso       Curso     @relation(fields: [cursoId], references: [id])
+  instrutor   Instrutor @relation(fields: [instrutorId], references: [id])
+
+  @@id([cursoId, instrutorId])
+  @@map("curso_instrutores")
+}
+
 model Curso {
   id            String   @id @default(uuid())
   titulo        String
   descricao     String
   thumbnail     String?
   categoriaId   String
-  instrutor     String
   nivel         String // iniciante, intermediario, avancado
   preco         Decimal? @db.Decimal(10, 2)
   precoOriginal Decimal? @db.Decimal(10, 2)
@@ -95,6 +114,7 @@ model Curso {
   // Relacionamentos
   categoria     Categoria        @relation(fields: [categoriaId], references: [id])
   modulos       Modulo[]
+  instrutores CursoInstrutor[]
   usuarioCursos UsuarioCurso[]
   avaliacoes    CursoAvaliacao[]
   anotacoes     Anotacao[]
