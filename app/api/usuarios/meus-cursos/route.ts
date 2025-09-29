@@ -1,21 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 async function getUserFromToken(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  
-  if (!token) {
-    throw new Error('Token não encontrado');
-  }
+  const token = request.cookies.get("token")?.value;
+  if (!token) throw new Error("Token não encontrado");
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { sub: string };
     return decoded.sub;
-  } catch (error) {
-    throw new Error('Token inválido');
+  } catch {
+    throw new Error("Token inválido");
   }
 }
 
@@ -29,28 +26,37 @@ export async function GET(request: NextRequest) {
         curso: {
           include: {
             categoria: true,
-            instrutor: {
-              select: {
-                id: true,
-                name: true,
+            instrutores: {
+              include: {
+                instrutor: {
+                  select: {
+                    id: true,
+                    nome: true,
+                    avatar: true,
+                  },
+                },
               },
             },
-            modulos: {
+            cursoModulos: {
               include: {
-                aulas: true,
+                modulo: {
+                  include: {
+                    aulaModulos: true,
+                  }
+                }
               },
             },
           },
         },
       },
-      orderBy: { dataCompra: 'desc' },
+      orderBy: { dataCompra: "desc" },
     });
 
     return NextResponse.json({ data: meusCursos });
   } catch (error) {
-    console.error('Erro ao buscar meus cursos:', error);
+    console.error("Erro ao buscar meus cursos:", error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: "Erro interno do servidor" },
       { status: 500 }
     );
   }

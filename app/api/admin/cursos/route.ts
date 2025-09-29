@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 export async function GET(req: NextRequest) {
   try {
+
     // Verificar token de autenticação
     const token = req.cookies.get("token")?.value;
     if (!token) {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
         categoria: true,
         cursoModulos: { include: { modulo: true } },
         instrutores: { include: { instrutor: true } },
-        usuarioCursos: true, // 🔥 para contar alunos
+        usuarioCursos: true, //  para contar alunos
       },
       orderBy: { createdAt: "desc" },
     });
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
       descricao: string;
       categoriaId: string;
       instrutoresIds: string[];
-      modulosSelecionados?: string[]; // 🔥 novo
+      modulosSelecionados?: string[];
       preco?: number;
       nivel: string;
       status?: string;
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
       descricao,
       categoriaId,
       instrutoresIds,
-      modulosSelecionados = [], // 🔥 novo
+      modulosSelecionados = [],
       preco,
       nivel,
       status,
@@ -155,14 +156,14 @@ export async function POST(req: NextRequest) {
         nivel,
         categoria: { connect: { id: categoriaId } },
         preco,
-        status: status ?? "rascunho",
+        status: status ?? "publicado",
         thumbnail,
         instrutores: {
           create: instrutoresIds.map((id) => ({
             instrutor: { connect: { id } },
           })),
         },
-        // 🔥 cria vínculos na tabela pivot
+        // cria vínculos na tabela pivot
         cursoModulos: modulosSelecionados.length
           ? {
               create: modulosSelecionados.map((id) => ({

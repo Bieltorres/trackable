@@ -20,13 +20,12 @@ export async function GET(
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário tem acesso ao curso
@@ -44,32 +43,34 @@ export async function GET(
       );
     }
 
-    // Buscar dados da aula específica
-    const aula = await prisma.aula.findFirst({
-      where: {
-        id: aulaId,
-        modulo: {
-          cursoId: cursoId,
-        },
-      },
+    // Buscar aula com suas relações corretas
+    const aula = await prisma.aula.findUnique({
+      where: { id: aulaId },
       include: {
-        modulo: {
+        aulaModulos: {
           include: {
-            curso: {
+            modulo: {
               include: {
-                categoria: true,
-                instrutor: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                  },
-                },
-                modulos: {
-                  orderBy: { ordem: "asc" },
+                cursoModulos: {
+                  where: { cursoId: cursoId },
                   include: {
-                    aulas: {
-                      orderBy: { ordem: "asc" },
+                    curso: {
+                      include: {
+                        categoria: true,
+                        instrutores: {
+                          include: {
+                            instrutor: {
+                              select: {
+                                id: true,
+                                nome: true,
+                                bio: true,
+                                avatar: true,
+                                redesSociais: true,
+                              },
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -77,6 +78,7 @@ export async function GET(
             },
           },
         },
+        arquivos: true,
       },
     });
 
@@ -87,10 +89,80 @@ export async function GET(
       );
     }
 
+    // Verificar se a aula pertence ao curso
+    const pertenceAoCurso = aula.aulaModulos.some((am) =>
+      am.modulo.cursoModulos.some((cm) => cm.cursoId === cursoId)
+    );
+
+    if (!pertenceAoCurso) {
+      return NextResponse.json(
+        { error: "Esta aula não pertence ao curso especificado" },
+        { status: 403 }
+      );
+    }
+
+    // Buscar o curso completo com módulos e aulas ordenados
+    const curso = await prisma.curso.findUnique({
+      where: { id: cursoId },
+      include: {
+        categoria: true,
+        instrutores: {
+          include: {
+            instrutor: {
+              select: {
+                id: true,
+                nome: true,
+                bio: true,
+                avatar: true,
+                redesSociais: true,
+              },
+            },
+          },
+        },
+        cursoModulos: {
+          include: {
+            modulo: {
+              include: {
+                aulaModulos: {
+                  include: {
+                    aula: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Ordenar módulos e aulas
+    if (curso?.cursoModulos) {
+      curso.cursoModulos.sort(
+        (a, b) => (a.modulo?.ordem || 0) - (b.modulo?.ordem || 0)
+      );
+
+      curso.cursoModulos.forEach((cm) => {
+        if (cm.modulo?.aulaModulos) {
+          cm.modulo.aulaModulos.sort(
+            (a, b) => (a.aula?.ordem || 0) - (b.aula?.ordem || 0)
+          );
+        }
+      });
+    }
+
+    // Buscar progresso da aula atual
+    const progressoAula = await prisma.usuarioCursoAula.findFirst({
+      where: {
+        usuarioCursoId: usuarioCurso.id,
+        aulaId: aulaId,
+      },
+    });
+
     return NextResponse.json({
       aula,
-      curso: aula.modulo.curso,
+      curso,
       usuarioCurso,
+      progressoAula: progressoAula || null,
     });
   } catch (error) {
     console.error("Erro ao buscar aula:", error);

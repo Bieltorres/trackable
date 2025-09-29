@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Youtube,
-  BarChart,
-  Zap,
-} from "lucide-react";
+import { Youtube, BarChart, Zap } from "lucide-react";
 import { CourseModal } from "@/components/course-modal";
 import { UserSettingsModal } from "@/components/user-settings-modal";
 import { AdminConfigModal } from "@/components/admin-config-modal";
@@ -22,6 +18,7 @@ import {
 } from "@/store/slices/cursosSlice";
 import { fetchUserProfile, fetchMeusCursos } from "@/store/slices/userSlice";
 import { Curso } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 const niveis = ["Todos", "iniciante", "intermediario", "avancado"];
 
@@ -49,7 +46,6 @@ export default function DashboardPage() {
   ] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Curso | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(true);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -67,14 +63,29 @@ export default function DashboardPage() {
     }
   };
 
-  const handleCourseClick = (curso: Curso) => {
+  const handleCourseClick = async (curso: Curso) => {
     const cursoAdquirido = meusCursos.find((mc) => mc.cursoId === curso.id);
 
     if (cursoAdquirido) {
-      // Se o curso já foi adquirido, redireciona para a página de aulas
-      window.location.href = `/curso/${curso.id}/aula/1`;
+      // Mudou aqui: /player em vez de direto /api/cursos/[id]
+      const res = await fetch(`/api/cursos/${curso.id}/player`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      const aulaId = data?.data?.aulaRedirect?.id;
+
+      if (aulaId) {
+        window.location.href = `/curso/${curso.id}/aula/${aulaId}`;
+      } else {
+        toast({
+          title: "Erro ao buscar aula",
+          description: "Não foi possível encontrar uma aula neste curso.",
+          variant: "destructive",
+        });
+      }
     } else {
-      // Se não foi adquirido, abre o modal de compra
       setSelectedCourse(curso);
       setIsModalOpen(true);
     }
@@ -184,10 +195,8 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
         {/* Main Content Area */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* Banner Hero */}
@@ -249,16 +258,16 @@ export default function DashboardPage() {
 
       {/* Modal do Curso */}
       <CourseModal
-        curso={selectedCourse}
+        cursoId={selectedCourse?.id || null}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
 
-      {/* Modal de Configurações Admin */}
+      {/* Modal de Configurações Admin
       <AdminConfigModal
         isOpen={isAdminConfigOpen}
         onClose={() => setIsAdminConfigOpen(false)}
-      />
+      /> */}
     </div>
   );
 }

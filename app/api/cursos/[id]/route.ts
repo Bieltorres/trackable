@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
 export async function GET(
   request: NextRequest,
@@ -20,13 +20,12 @@ export async function GET(
 
     let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
       userId = decoded.sub;
     } catch (error) {
-      return NextResponse.json(
-        { error: "Token inválido" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     // Verificar se o usuário tem acesso ao curso
@@ -48,26 +47,35 @@ export async function GET(
       where: { id },
       include: {
         categoria: true,
-        instrutor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            userInfo: {
+        instrutores: {
+          // ✅ CORRIGIDO: plural
+          include: {
+            instrutor: {
+              // ✅ Acessa o instrutor da relação
               select: {
-                bio: true,
+                id: true,
+                nome: true, // ✅ CORRIGIDO: "nome"
+                bio: true, // ✅ CORRIGIDO: campos corretos
                 avatar: true,
+                redesSociais: true,
               },
             },
           },
         },
-        modulos: {
+        cursoModulos: {
+          // ✅ CORRIGIDO: relação correta
           include: {
-            aulas: {
-              orderBy: { ordem: 'asc' },
+            modulo: {
+              include: {
+                aulaModulos: {
+                  include: {
+                    aula: true,
+                  },
+                  orderBy: { id: "asc" }, // ou outro campo de ordem
+                },
+              },
             },
           },
-          orderBy: { ordem: 'asc' },
         },
         _count: {
           select: {
@@ -80,9 +88,24 @@ export async function GET(
 
     if (!curso) {
       return NextResponse.json(
-        { error: 'Curso não encontrado' },
+        { error: "Curso não encontrado" },
         { status: 404 }
       );
+    }
+
+    // Ordenar módulos e aulas manualmente no JavaScript
+    if (curso.cursoModulos) {
+      curso.cursoModulos.sort(
+        (a, b) => (a.modulo?.ordem || 0) - (b.modulo?.ordem || 0)
+      );
+
+      curso.cursoModulos.forEach((cm) => {
+        if (cm.modulo?.aulaModulos) {
+          cm.modulo.aulaModulos.sort(
+            (a, b) => (a.aula?.ordem || 0) - (b.aula?.ordem || 0)
+          );
+        }
+      });
     }
 
     // Calcular média de avaliações
@@ -91,9 +114,10 @@ export async function GET(
       select: { nota: true },
     });
 
-    const mediaAvaliacoes = avaliacoes.length > 0
-      ? avaliacoes.reduce((sum, av) => sum + av.nota, 0) / avaliacoes.length
-      : 0;
+    const mediaAvaliacoes =
+      avaliacoes.length > 0
+        ? avaliacoes.reduce((sum, av) => sum + av.nota, 0) / avaliacoes.length
+        : 0;
 
     // Buscar algumas avaliações recentes
     const avaliacoesRecentes = await prisma.cursoAvaliacao.findMany({
@@ -106,7 +130,7 @@ export async function GET(
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { data: "desc" }, 
       take: 5,
     });
 
@@ -119,9 +143,9 @@ export async function GET(
       usuarioCurso,
     });
   } catch (error) {
-    console.error('Erro ao buscar curso:', error);
+    console.error("Erro ao buscar curso:", error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: "Erro interno do servidor" },
       { status: 500 }
     );
   }
