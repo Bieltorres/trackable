@@ -67,7 +67,6 @@ export default function DashboardPage() {
     const cursoAdquirido = meusCursos.find((mc) => mc.cursoId === curso.id);
 
     if (cursoAdquirido) {
-      // Mudou aqui: /player em vez de direto /api/cursos/[id]
       const res = await fetch(`/api/cursos/${curso.id}/player`, {
         method: "GET",
         credentials: "include",
@@ -108,22 +107,28 @@ export default function DashboardPage() {
   // Mapear cursos com informações de progresso dos meus cursos
   const cursosComProgresso = cursos.map((curso) => {
     const meuCurso = meusCursos.find((mc) => mc.cursoId === curso.id);
+
+    // ✅ USAR quantidadeAulas da API (já calculada)
     const totalAulas =
-      curso.modulos?.reduce(
+      curso.quantidadeAulas ??
+      (curso.modulos?.reduce(
         (acc, modulo) => acc + (modulo.aulas?.length || 0),
         0
-      ) || 0;
+      ) ||
+        0);
 
     return {
       ...curso,
       adquirido: !!meuCurso,
       progresso: meuCurso?.progresso || 0,
       status: meuCurso?.status || "disponivel",
+      quantidadeAulas: totalAulas, // ✅ Novo campo
       aulasTotal: totalAulas,
       aulasAssistidas: Math.floor(
         ((meuCurso?.progresso || 0) * totalAulas) / 100
       ),
-      duracaoTotal: "0h 0min", // TODO: calcular duração total das aulas
+      // ✅ USAR duracaoTotal da API (já calculada e formatada)
+      duracaoTotal: curso.duracaoTotal || "0min",
       categoria: curso.categoria?.nome || "Sem categoria",
       instrutor: curso.instrutor?.name || "Instrutor",
       avaliacao: curso.mediaAvaliacoes || 0,
@@ -191,7 +196,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     console.log("meusCursos do Redux:", meusCursos);
-  }, [meusCursos]);
+  }, []);
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">

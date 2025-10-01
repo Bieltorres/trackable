@@ -9,6 +9,7 @@ interface CursoComProgresso {
   thumbnail?: string | null;
   progresso: number;
   duracaoTotal: string;
+  quantidadeAulas?: number; // Novo campo da API
   aulasTotal: number;
   aulasAssistidas: number;
   categoria: string;
@@ -32,6 +33,44 @@ interface CoursesTabsProps {
   onCourseClick: (curso: CursoComProgresso) => void;
 }
 
+function mapCursoResponseToCursoComProgresso(curso: any): CursoComProgresso {
+  const usuarioCurso = curso.usuarioCursos?.[0];
+  const instrutor = curso.instrutores?.[0]?.instrutor;
+
+  // IMPORTANTE: Usar quantidadeAulas que vem da API (já calculada)
+  const quantidadeAulas = curso.quantidadeAulas ?? 0;
+
+  // IMPORTANTE: Usar duracaoTotal que vem da API (já calculada e formatada)
+  const duracaoTotal = curso.duracaoTotal || "0min";
+
+  // DEBUG: Descomente para ver os valores
+  console.log("Mapeando curso:", curso.titulo);
+  console.log("  - quantidadeAulas da API:", curso.quantidadeAulas);
+  console.log("  - duracaoTotal da API:", curso.duracaoTotal);
+
+  return {
+    id: curso.id,
+    titulo: curso.titulo,
+    descricao: curso.descricao,
+    thumbnail: curso.thumbnail,
+    progresso: usuarioCurso?.progresso ?? 0,
+    duracaoTotal: duracaoTotal, // Usar valor da API
+    quantidadeAulas: quantidadeAulas, // Usar valor da API
+    aulasTotal: quantidadeAulas, // Manter compatibilidade
+    aulasAssistidas: 0, // você pode calcular depois com base nas aulas concluídas
+    categoria: curso.categoria?.nome ?? "",
+    nivel: curso.nivel,
+    instrutor: instrutor?.nome ?? "Sem instrutor",
+    avaliacao: curso.mediaAvaliacoes ?? 0,
+    status: usuarioCurso?.status ?? "nao-iniciado",
+    adquirido: !!usuarioCurso,
+    preco: Number(curso.preco),
+    precoOriginal: curso.precoOriginal ? Number(curso.precoOriginal) : null,
+    desconto: curso.desconto ? Number(curso.desconto) : null,
+    mediaAvaliacoes: curso.mediaAvaliacoes,
+  };
+}
+
 export function CoursesTabs({
   activeTab,
   onTabChange,
@@ -40,6 +79,7 @@ export function CoursesTabs({
   onToggleFavorito,
   onCourseClick,
 }: CoursesTabsProps) {
+  console.log("cursos filtrados", cursosFiltrados);
   return (
     <Tabs
       value={activeTab}
@@ -96,3 +136,6 @@ export function CoursesTabs({
     </Tabs>
   );
 }
+
+// Exportar a função de mapeamento para uso em outros componentes
+export { mapCursoResponseToCursoComProgresso };

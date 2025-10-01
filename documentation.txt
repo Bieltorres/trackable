@@ -1,3 +1,37 @@
+1. LoadingSpinner (principal)
+tsx// Básico
+<LoadingSpinner />
+
+// Com mensagem
+<LoadingSpinner message="Carregando..." />
+
+// Tamanhos diferentes
+<LoadingSpinner size="sm" />
+<LoadingSpinner size="md" /> // padrão
+<LoadingSpinner size="lg" />
+
+// Tela cheia com backdrop
+<LoadingSpinner fullScreen message="Processando..." />
+
+// Com className customizada
+<LoadingSpinner className="my-custom-class" />
+2. LoadingDots (para botões)
+tsx<Button disabled>
+  <LoadingDots /> Salvando...
+</Button>
+3. LoadingSkeleton (para listas)
+tsx// Exibe 3 skeletons
+<LoadingSkeleton count={3} />
+Exemplos de uso:
+tsx// No formulário quando salva
+{isLoading && <LoadingSpinner size="sm" />}
+
+// Ao deletar com overlay
+{deleting && <LoadingSpinner fullScreen message="Deletando aula..." />}
+
+// Lista carregando
+{loading ? <LoadingSkeleton count={5} /> : <AulasList aulas={aulas} />}
+
 Guia Rápido do Prisma
 =====================
 

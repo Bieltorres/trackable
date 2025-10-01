@@ -2,19 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BookOpen, Settings, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-import Router from "next/router";
 
 export interface MenuItem {
   label: string;
   href: string;
   icon?: React.ElementType;
-  active?: boolean;
   isAdmin?: boolean;
 }
 
@@ -28,7 +27,7 @@ interface SidebarProps {
   onClose: () => void;
   menuItems: MenuItem[];
   cursosFavoritos?: Favorito[];
-  onMenuItemClick?: (item: MenuItem) => void; // opcional para itens admin
+  onMenuItemClick?: (item: MenuItem) => void;
 }
 
 export default function Sidebar({
@@ -39,6 +38,13 @@ export default function Sidebar({
   onMenuItemClick,
 }: SidebarProps) {
   const user = useSelector((state: RootState) => state.user.user);
+  const pathname = usePathname();
+
+  // Helper para verificar se a rota está ativa
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <aside
@@ -52,8 +58,7 @@ export default function Sidebar({
       {/* Topo */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700 flex-shrink-0">
         <div className="flex items-center gap-5">
-          {/* Você pode trocar por logo */}{" "}
-          <div className="bg-blue-600 text-white p-2 rounded-lg">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg">
             <BookOpen className="h-5 w-5" />
           </div>
           <span className="text-lg font-semibold">TrackAble</span>
@@ -62,7 +67,7 @@ export default function Sidebar({
         <Button
           variant="ghost"
           size="sm"
-          className="lg:hidden text-white "
+          className="lg:hidden text-white"
           onClick={onClose}
         >
           <X className="h-5 w-5" />
@@ -75,6 +80,7 @@ export default function Sidebar({
         <nav className="space-y-2" aria-label="Main menu">
           {menuItems.map((item) => {
             const Icon = item.icon;
+            const active = isActive(item.href);
             const activeClasses =
               "bg-blue-600 text-white shadow-lg shadow-blue-600/25";
             const normalClasses =
@@ -90,14 +96,14 @@ export default function Sidebar({
                   onClick={onClose}
                   className={cn(
                     "w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
-                    item.active ? activeClasses : normalClasses
+                    active ? activeClasses : normalClasses
                   )}
                 >
                   {Icon && (
                     <Icon
                       className={cn(
                         "h-5 w-5 mr-3",
-                        item.active ? "text-white" : "text-slate-400"
+                        active ? "text-white" : "text-slate-400"
                       )}
                     />
                   )}
@@ -116,14 +122,14 @@ export default function Sidebar({
                 onClick={onClose}
                 className={cn(
                   "w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group",
-                  item.active ? activeClasses : normalClasses
+                  active ? activeClasses : normalClasses
                 )}
               >
                 {Icon && (
                   <Icon
                     className={cn(
                       "h-5 w-5 mr-3",
-                      item.active ? "text-white" : "text-slate-400"
+                      active ? "text-white" : "text-slate-400"
                     )}
                   />
                 )}
@@ -143,19 +149,27 @@ export default function Sidebar({
             </div>
 
             <ul className="space-y-1">
-              {cursosFavoritos.map((curso) => (
-                <li key={curso.id}>
-                  <Link
-                    href={`/curso/${curso.id}`}
-                    onClick={onClose}
-                    className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    title={curso.title}
-                  >
-                    <span className="h-2 w-2 bg-red-400 rounded-full mr-3 flex-shrink-0" />
-                    <span className="truncate">{curso.title}</span>
-                  </Link>
-                </li>
-              ))}
+              {cursosFavoritos.map((curso) => {
+                const cursoActive = pathname === `/curso/${curso.id}`;
+                return (
+                  <li key={curso.id}>
+                    <Link
+                      href={`/curso/${curso.id}`}
+                      onClick={onClose}
+                      className={cn(
+                        "w-full flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150",
+                        cursoActive
+                          ? "bg-blue-600 text-white"
+                          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      )}
+                      title={curso.title}
+                    >
+                      <span className="h-2 w-2 bg-red-400 rounded-full mr-3 flex-shrink-0" />
+                      <span className="truncate">{curso.title}</span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -166,7 +180,6 @@ export default function Sidebar({
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="h-10 w-10 rounded-full bg-slate-600 flex items-center justify-center mr-3">
-              {/* placeholder avatar */}
               <svg
                 className="h-4 w-4 text-white"
                 viewBox="0 0 24 24"

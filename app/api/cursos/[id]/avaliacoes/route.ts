@@ -18,7 +18,6 @@ export async function GET(
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
       take: 10, // Limitar a 10 avaliações mais recentes
     });
 

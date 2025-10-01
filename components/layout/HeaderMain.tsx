@@ -19,7 +19,8 @@ export function HeaderMain({
   onSidebarToggle,
 }: HeaderProps) {
   const router = useRouter();
-  const user = useSelector((state: RootState) => state?.user?.user);
+  const user = useSelector((state: RootState) => state.user.user);
+  console.log(user)
 
   if (!user) return null;
 
@@ -46,10 +47,10 @@ export function HeaderMain({
 
         <h1 className="text-xl font-bold text-gray-900">{title}</h1>
 
-          <Badge className="ml-3 bg-orange-100 text-orange-800">
-            <Shield className="h-3 w-3 mr-1" />
-            Modo {user?.role}
-          </Badge>
+        <Badge className="ml-3 bg-orange-100 text-orange-800">
+          <Shield className="h-3 w-3 mr-1" />
+          Modo {user?.role}
+        </Badge>
       </div>
 
       <div className="flex items-center space-x-4">

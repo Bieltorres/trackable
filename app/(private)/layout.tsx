@@ -23,6 +23,7 @@ export default function PrivateLayout({
 }: {
   children: React.ReactNode;
 }) {
+  console.log("PrivateLayout render");
   const { user } = useAppSelector((state) => state.user);
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -66,7 +67,12 @@ export default function PrivateLayout({
     { icon: BarChart3, label: "Progresso", href: "/progresso" },
     { icon: FileText, label: "Anotações", href: "/anotacoes" },
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },
-    { icon: Shield, label: "Admin Config", href: "/admin/config", isAdmin: true },
+    {
+      icon: Shield,
+      label: "Admin Config",
+      href: "/admin/config",
+      isAdmin: true,
+    },
     { icon: User, label: "Configurações", href: "/perfil" },
   ];
 
@@ -106,14 +112,14 @@ export default function PrivateLayout({
           />
         )}
 
-        <div className="flex-1 flex flex-col ">
+        <div className="flex flex-col min-h-screen w-full">
           <HeaderMain
             title={pageTitle}
             isAdmin={isAdmin}
             onSidebarToggle={() => setSidebarOpen(true)}
           />
 
-          <main className="p-6">
+          <main className="w-full flex-grow min-h-0">
             {layoutError ? (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <h2 className="text-red-800 font-semibold mb-2">

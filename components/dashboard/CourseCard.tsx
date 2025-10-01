@@ -21,6 +21,7 @@ interface CursoComProgresso {
   thumbnail?: string | null;
   progresso: number;
   duracaoTotal: string;
+  quantidadeAulas?: number; // Novo campo da API
   aulasTotal: number;
   aulasAssistidas: number;
   categoria: string;
@@ -88,7 +89,8 @@ export function CourseCard({
     }
 
     // Verificar se é um curso novo (criado recentemente)
-    const isNovo = new Date().getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000; // 30 dias
+    const isNovo =
+      new Date().getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000; // 30 dias
     if (isNovo) {
       badges.push(
         <Badge key="novo" className="bg-green-100 text-green-800 text-xs">
@@ -101,6 +103,12 @@ export function CourseCard({
     return badges;
   };
 
+  // Usar quantidadeAulas da API se disponível, senão fallback para aulasTotal
+  const totalAulas = curso.quantidadeAulas ?? curso.aulasTotal;
+
+  // Garantir que duracaoTotal sempre tenha um valor
+  const duracaoFormatada = curso.duracaoTotal || "0min";
+  console.log("duracaoFormatada", duracaoFormatada);
   return (
     <Card
       className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer relative h-80"
@@ -109,7 +117,11 @@ export function CourseCard({
       {/* Imagem de fundo que preenche todo o card */}
       <div className="absolute inset-0">
         <img
-          src={curso.thumbnail || "/placeholder.svg?height=200&width=300&text=" + encodeURIComponent(curso.titulo)}
+          src={
+            curso.thumbnail ||
+            "/placeholder.svg?height=200&width=300&text=" +
+              encodeURIComponent(curso.titulo)
+          }
           alt={curso.titulo}
           className="w-full h-full object-cover"
         />
@@ -130,9 +142,7 @@ export function CourseCard({
               }}
               className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors self-start"
               title={
-                isFavorito
-                  ? "Remover dos favoritos"
-                  : "Adicionar aos favoritos"
+                isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"
               }
             >
               <Heart
@@ -145,9 +155,7 @@ export function CourseCard({
               />
             </button>
           ) : (
-            <div className="flex flex-col gap-1">
-              {getSpecialBadges(curso)}
-            </div>
+            <div className="flex flex-col gap-1">{getSpecialBadges(curso)}</div>
           )}
         </div>
 
@@ -176,7 +184,7 @@ export function CourseCard({
           </p>
 
           {/* Avaliação e instrutor - apenas quando disponível */}
-          {curso.avaliacao && (
+          {curso.avaliacao > 0 && (
             <div className="flex items-center gap-2 text-sm text-gray-300 mb-3">
               <span className="flex items-center gap-1">
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -195,11 +203,11 @@ export function CourseCard({
               <div className="flex items-center gap-4 text-sm text-gray-300">
                 <span className="flex items-center gap-1">
                   <BookOpen className="h-3 w-3" />
-                  {curso.aulasTotal} aulas
+                  {totalAulas} aulas
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {curso.duracaoTotal}
+                  {duracaoFormatada}
                 </span>
               </div>
               <Button
@@ -219,11 +227,11 @@ export function CourseCard({
               <div className="flex items-center gap-4 text-sm text-gray-300">
                 <span className="flex items-center gap-1">
                   <BookOpen className="h-3 w-3" />
-                  {curso.aulasAssistidas}/{curso.aulasTotal} aulas
+                  {curso.aulasAssistidas}/{totalAulas} aulas
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {curso.duracaoTotal}
+                  {duracaoFormatada}
                 </span>
               </div>
 

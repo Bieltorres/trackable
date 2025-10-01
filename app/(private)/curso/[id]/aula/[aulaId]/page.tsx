@@ -28,6 +28,7 @@ import { UserSettingsModal } from "@/components/user-settings-modal";
 import { AdminConfigModal } from "@/components/admin-config-modal";
 import { useAppSelector } from "@/store/hooks";
 import { useToast } from "@/components/ui/use-toast";
+
 export default function AulaPage() {
   const params = useParams();
   const { user } = useAppSelector((state) => state.user);
@@ -53,7 +54,7 @@ export default function AulaPage() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false);
-
+console.log("AulaPage render")
   // Buscar dados da aula
   useEffect(() => {
     const fetchAulaData = async () => {
@@ -210,7 +211,7 @@ export default function AulaPage() {
   const instrutor = cursoData.instrutores?.[0]?.instrutor;
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="p-6 h-full bg-gray-50 flex overflow-hidden">
       {/* Overlay para mobile */}
       {sidebarOpen && (
         <div
@@ -224,30 +225,32 @@ export default function AulaPage() {
         {/* Main Content Area */}
         <main className="flex-1 flex overflow-hidden">
           {/* Video e Conteúdo Principal */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
+          <div className="bg-white  flex-1 flex flex-col overflow-y-auto">
             {/* Video Player */}
-            <div className="bg-black w-full h-screen relative">
-  {aulaAtual.videoUrl ? (
-    <iframe
-      src={`${aulaAtual.videoUrl}${
-        aulaAtual.videoUrl.includes("?") ? "&" : "?"
-      }preload=true&autoplay=false&responsive=true`}
-      className="absolute top-0 left-0 w-full h-full"
-      style={{ border: "none" }}
-      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
-      allowFullScreen
-    />
-  ) : (
-    <div className="absolute inset-0 w-full h-full bg-gray-800 flex items-center justify-center">
-      <div className="text-center text-white">
-        <PlayCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-        <p>Vídeo não disponível</p>
-      </div>
-    </div>
-  )}
-</div>
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                paddingTop: "56.25%",
+              }}
+            >
+              <iframe
+                src={aulaAtual?.videoUrl}
+                loading="lazy"
+                style={{
+                  border: 0,
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  paddingRight: "24px",
+                }}
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
 
-            
             {/* Conteúdo da Aula */}
             <div className="p-6 space-y-6">
               {/* Título e Descrição */}
