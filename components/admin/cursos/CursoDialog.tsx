@@ -91,14 +91,10 @@ export function CursoDialog({
     console.log("CursoDialog handleSubmit, editingId:", editingId);
 
     if (!editingId) {
-      // Modo criação
       console.log("Modo CRIAÇÃO");
       cursoForm.handleSubmit();
       return;
     }
-
-    // Modo edição
-    console.log("Modo EDIÇÃO - fazendo PUT");
 
     try {
       const response = await fetch(`/api/admin/cursos/${editingId}`, {

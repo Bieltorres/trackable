@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ModulosList } from "./ModulosList";
-import { ModuloForm } from "./ModuloForm";
+import { ModuloDialog } from "./ModuloDialog";
 import { LoadingSpinner } from "@/components/layout/LoadingSpinner";
-import { ConfirmDialog, useConfirmDialog } from "@/components/layout/ConfirmDialog";
-import { useModuloForm } from "@/components/hooks/admin/useModuloForm";
+import {
+  ConfirmDialog,
+  useConfirmDialog,
+} from "@/components/layout/ConfirmDialog";
 import { toast } from "sonner";
 
 interface ModulosTabProps {
@@ -26,8 +28,9 @@ export function ModulosTab({
   setModulos,
   isLoading,
 }: ModulosTabProps) {
-  const [showForm, setShowForm] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingModulo, setEditingModulo] = useState<any>(null);
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [moduloToDelete, setModuloToDelete] = useState<{
     id: string;
@@ -35,12 +38,6 @@ export function ModulosTab({
   } | null>(null);
 
   const confirmDialog = useConfirmDialog();
-
-  const moduloForm = useModuloForm((newModulo) => {
-    setModulos([newModulo, ...modulos]);
-    toast.success("Módulo criado com sucesso!");
-    setShowForm(false);
-  });
 
   // Remove duplicados por id
   const modulosUnicos = Array.from(
@@ -63,29 +60,8 @@ export function ModulosTab({
       console.log("✅ Módulo carregado:", modulo);
 
       setEditingId(id);
-
-      // Extrair os IDs das aulas vinculadas
-      const aulasSelecionadas = modulo.aulaModulos
-        ? modulo.aulaModulos.map((am: any) => am.aulaId)
-        : [];
-
-      // Extrair os IDs dos cursos vinculados
-      const cursosSelecionados = modulo.cursoModulos
-        ? modulo.cursoModulos.map((cm: any) => cm.cursoId)
-        : [];
-
-      console.log("Aulas selecionadas:", aulasSelecionadas);
-      console.log("Cursos selecionados:", cursosSelecionados);
-
-      moduloForm.setFormData({
-        titulo: modulo.titulo,
-        descricao: modulo.descricao || "",
-        ordem: modulo.ordem?.toString() || "0",
-        aulasSelecionadas,
-        cursosSelecionados,
-      });
-
-      setShowForm(true);
+      setEditingModulo(modulo);
+      setDialogOpen(true);
     } catch (error) {
       console.error("❌ Erro ao carregar módulo para edição:", error);
       toast.error("Erro ao carregar módulo para edição");
@@ -94,55 +70,21 @@ export function ModulosTab({
     }
   };
 
-  const handleSubmitEdit = async () => {
-    console.log("🔘 handleSubmitEdit chamado, editingId:", editingId);
-
-    if (!editingId) {
-      console.log("➡️ Modo CRIAÇÃO - chamando moduloForm.handleSubmit");
-      moduloForm.handleSubmit();
-      return;
-    }
-
-    console.log("➡️ Modo EDIÇÃO - fazendo PUT");
-
-    try {
-      console.log("📤 Enviando PUT para:", `/api/admin/modulos/${editingId}`);
-
-      const response = await fetch(`/api/admin/modulos/${editingId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          titulo: moduloForm.formData.titulo,
-          descricao: moduloForm.formData.descricao,
-          ordem: parseInt(moduloForm.formData.ordem) || 0,
-          aulasSelecionadas: moduloForm.formData.aulasSelecionadas,
-          cursosSelecionados: moduloForm.formData.cursosSelecionados,
-        }),
-      });
-
-      console.log("📥 Response status:", response.status, response.ok);
-
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar módulo");
-      }
-
-      const moduloAtualizado = await response.json();
-      console.log("✅ Módulo atualizado:", moduloAtualizado);
-
-      setModulos(
-        modulos.map((m) => (m.id === editingId ? moduloAtualizado : m))
-      );
-
-      console.log("🎉 Chamando toast.success");
+  const handleModuloCreated = (modulo: any) => {
+    if (editingId) {
+      // Atualizar módulo existente
+      setModulos(modulos.map((m) => (m.id === editingId ? modulo : m)));
       toast.success("Módulo atualizado com sucesso!");
-
-      handleCancelEdit();
-    } catch (error) {
-      console.error("❌ Erro ao atualizar módulo:", error);
-      toast.error("Erro ao atualizar módulo");
+    } else {
+      // Adicionar novo módulo
+      setModulos([modulo, ...modulos]);
+      toast.success("Módulo criado com sucesso!");
     }
+
+    // Resetar estado
+    setDialogOpen(false);
+    setEditingId(null);
+    setEditingModulo(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -174,38 +116,27 @@ export function ModulosTab({
     });
   };
 
-  const handleCancelEdit = () => {
+  const handleOpenDialog = () => {
     setEditingId(null);
-    setShowForm(false);
-    moduloForm.setFormData({
-      titulo: "",
-      descricao: "",
-      ordem: "",
-      aulasSelecionadas: [],
-      cursosSelecionados: [],
-    });
+    setEditingModulo(null);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = (open: boolean) => {
+    if (!open) {
+      setEditingId(null);
+      setEditingModulo(null);
+    }
+    setDialogOpen(open);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold">Módulos Cadastrados</h3>
-        <Button
-          onClick={() => {
-            if (editingId) {
-              handleCancelEdit();
-            } else {
-              setShowForm(!showForm);
-            }
-          }}
-          disabled={loadingEdit}
-        >
+        <Button onClick={handleOpenDialog} disabled={loadingEdit}>
           <PlusCircle className="h-4 w-4 mr-2" />
-          {editingId
-            ? "Cancelar Edição"
-            : showForm
-            ? "Ocultar Formulário"
-            : "Novo Módulo"}
+          Novo Módulo
         </Button>
       </div>
 
@@ -214,26 +145,22 @@ export function ModulosTab({
       )}
 
       {!loadingEdit && (
-        <>
-          <ModulosList
-            modulos={modulosUnicos}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-
-          {showForm && (
-            <ModuloForm
-              formData={moduloForm.formData}
-              cursos={cursos}
-              aulas={aulas}
-              isLoading={moduloForm.isLoading}
-              onChange={moduloForm.setFormData}
-              onSubmit={editingId ? handleSubmitEdit : moduloForm.handleSubmit}
-              isEditing={!!editingId}
-            />
-          )}
-        </>
+        <ModulosList
+          modulos={modulosUnicos}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       )}
+
+      <ModuloDialog
+        open={dialogOpen}
+        onOpenChange={handleCloseDialog}
+        cursos={cursos}
+        aulas={aulas}
+        onModuloCreated={handleModuloCreated}
+        editingModulo={editingModulo}
+        editingId={editingId}
+      />
 
       <ConfirmDialog
         open={confirmDialog.isOpen}

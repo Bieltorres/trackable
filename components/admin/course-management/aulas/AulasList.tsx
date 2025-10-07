@@ -19,15 +19,22 @@ export function AulasList({ aulas, onEdit, onDelete, onView }: AulasListProps) {
 
   return (
     <div className="space-y-4">
-      {aulas.map((aula) => (
-        <AulaCard
-          key={aula.id}
-          aula={aula}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onView={onView}
-        />
-      ))}
+      {aulas.map((aula, index) => {
+        const key =
+          aula.id ??
+          aula.tempKey ?? // use uma key temporária que você cria ao adicionar no estado
+          `${aula.slug || aula.titulo || "aula"}-${index}`;
+
+        return (
+          <AulaCard
+            key={String(key)}
+            aula={aula}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onView={onView}
+          />
+        );
+      })}
     </div>
   );
 }

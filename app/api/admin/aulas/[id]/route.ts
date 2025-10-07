@@ -86,13 +86,22 @@ export async function PUT(
 
       // Criar novos arquivos
       if (arquivos.length > 0) {
-        await prisma.arquivoAula.createMany({
-          data: arquivos.map((arquivo: any) => ({
+        const arquivosSanitizados = arquivos
+          .map((arquivo: any) => ({
             aulaId: id,
-            nome: arquivo.nome,
-            url: arquivo.url,
-          })),
-        });
+            nome: arquivo?.nome ?? "Arquivo",
+            url: arquivo?.url ?? "",
+          }))
+          .filter(
+            (arquivo: { aulaId: string; nome: string; url: string }) =>
+              arquivo.url
+          );
+
+        if (arquivosSanitizados.length > 0) {
+          await prisma.arquivoAula.createMany({
+            data: arquivosSanitizados,
+          });
+        }
       }
     }
 

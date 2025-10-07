@@ -28,6 +28,7 @@ import { UserSettingsModal } from "@/components/user-settings-modal";
 import { AdminConfigModal } from "@/components/admin-config-modal";
 import { useAppSelector } from "@/store/hooks";
 import { useToast } from "@/components/ui/use-toast";
+import { BotaoBaixar } from "@/components/ui/botaoBaixar";
 
 export default function AulaPage() {
   const params = useParams();
@@ -54,7 +55,7 @@ export default function AulaPage() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false);
-console.log("AulaPage render")
+  console.log("AulaPage render");
   // Buscar dados da aula
   useEffect(() => {
     const fetchAulaData = async () => {
@@ -176,6 +177,24 @@ console.log("AulaPage render")
         return "📁";
     }
   };
+
+  async function handleDownload(arquivo: { key: string; nome: string }) {
+    const res = await fetch("/api/files/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: arquivo.key, filename: arquivo.nome }),
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      console.error("Falha ao gerar link:", t);
+      return;
+    }
+
+    const { url } = await res.json();
+    // Abre a URL pré-assinada (válida por 60s)
+    window.location.href = url;
+  }
 
   if (loading) {
     return (
@@ -353,17 +372,7 @@ console.log("AulaPage render")
                               </p>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={arquivo.url}
-                              download
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Baixar
-                            </a>
-                          </Button>
+                          <BotaoBaixar arquivo={arquivo} />
                         </div>
                       ))
                     ) : (

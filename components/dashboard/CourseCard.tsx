@@ -108,7 +108,6 @@ export function CourseCard({
 
   // Garantir que duracaoTotal sempre tenha um valor
   const duracaoFormatada = curso.duracaoTotal || "0min";
-  console.log("duracaoFormatada", duracaoFormatada);
   return (
     <Card
       className="overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer relative h-80"

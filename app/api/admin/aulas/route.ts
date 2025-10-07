@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const requestBody = await req.json();
     const {
       titulo,
       descricao,
@@ -114,8 +115,24 @@ export async function POST(req: NextRequest) {
       duracao,
       ordem,
       modulosSelecionados,
+      moduloIds,
       arquivos,
-    } = await req.json();
+    } = requestBody;
+
+    const modulosParaVincular = Array.isArray(modulosSelecionados)
+      ? modulosSelecionados
+      : Array.isArray(moduloIds)
+      ? moduloIds
+      : [];
+
+    const arquivosParaCriar = Array.isArray(arquivos)
+      ? arquivos
+          .map((arquivo: any) => ({
+            nome: arquivo?.nome ?? "Arquivo",
+            url: arquivo?.url ?? "",
+          }))
+          .filter((arquivo) => arquivo.url)
+      : [];
 
     if (!titulo || !descricao) {
       return NextResponse.json(
@@ -133,20 +150,19 @@ export async function POST(req: NextRequest) {
         duracao: duracao || null,
         ordem: ordem ? Number(ordem) : 1,
 
-        aulaModulos: modulosSelecionados?.length
+        aulaModulos: modulosParaVincular.length
           ? {
-              create: modulosSelecionados.map((moduloId: string) => ({
+              create: modulosParaVincular.map((moduloId: string) => ({
                 modulo: { connect: { id: moduloId } },
               })),
             }
           : undefined,
 
-        arquivos: arquivos?.length
+        arquivos: arquivosParaCriar.length
           ? {
-              create: arquivos.map((arq: any) => ({
-                nome: arq.nome,
-                tipo: arq.tipo,
-                url: arq.url,
+              create: arquivosParaCriar.map((arquivo) => ({
+                nome: arquivo.nome,
+                url: arquivo.url,
               })),
             }
           : undefined,
