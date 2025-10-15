@@ -1,18 +1,40 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { User, Mail, Phone, Calendar, MapPin, Shield, Key, CreditCard, Eye, EyeOff, Save, Trash2, Plus, Check, AlertTriangle } from 'lucide-react'
-import { useAppSelector } from "@/store/hooks"
-import { useToast } from "@/components/ui/use-toast"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  Shield,
+  Key,
+  CreditCard,
+  Eye,
+  EyeOff,
+  Save,
+  Trash2,
+  Plus,
+  Check,
+  AlertTriangle,
+} from "lucide-react";
+import { useAppSelector } from "@/store/hooks";
+import { useToast } from "@/components/ui/use-toast";
 
 // Dados simulados de métodos de pagamento
 const metodosPagemento = [
@@ -34,19 +56,19 @@ const metodosPagemento = [
     validade: "08/25",
     principal: false,
   },
-]
+];
 
 export default function PerfilPage() {
-  const user = useAppSelector((state) => state.user.user)
-  const { toast } = useToast()
-  const [mounted, setMounted] = useState(false)
-  
-  const [activeTab, setActiveTab] = useState("dados-gerais")
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isStripeLoading, setIsStripeLoading] = useState(false)
+  const user = useAppSelector((state) => state.user.user);
+  const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
+
+  const [activeTab, setActiveTab] = useState("dados-gerais");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isStripeLoading, setIsStripeLoading] = useState(false);
 
   // Estados para os formulários
   const [dadosGerais, setDadosGerais] = useState({
@@ -62,44 +84,46 @@ export default function PerfilPage() {
       pais: "Brasil",
     },
     bio: "",
-  })
-  const [userInfo, setUserInfo] = useState<any>(null)
+  });
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [senhas, setSenhas] = useState({
     senhaAtual: "",
     novaSenha: "",
     confirmarSenha: "",
-  })
+  });
   const [configuracoesSecurity, setConfiguracoesSecurity] = useState({
     autenticacaoDoisFatores: false,
     notificacaoLogin: true,
     sessaoUnica: false,
-  })
+  });
 
   useEffect(() => {
-    setMounted(true)
+    setMounted(true);
     if (user) {
-      setDadosGerais(prev => ({
+      setDadosGerais((prev) => ({
         ...prev,
         nome: user.name || "",
         email: user.email || "",
         telefone: user.phone || "",
-        dataNascimento: user.birthdate ? new Date(user.birthdate).toISOString().split('T')[0] : "",
-      }))
-      
+        dataNascimento: user.birthdate
+          ? new Date(user.birthdate).toISOString().split("T")[0]
+          : "",
+      }));
+
       // Buscar informações adicionais do usuário
-      fetchUserInfo()
+      fetchUserInfo();
     }
-  }, [user])
+  }, [user]);
 
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch("/api/auth/user-info")
+      const response = await fetch("/api/auth/user-info");
       if (response.ok) {
-        const data = await response.json()
-        setUserInfo(data.userInfo)
-        
+        const data = await response.json();
+        setUserInfo(data.userInfo);
+
         if (data.userInfo) {
-          setDadosGerais(prev => ({
+          setDadosGerais((prev) => ({
             ...prev,
             bio: data.userInfo.bio || "",
             endereco: {
@@ -108,14 +132,14 @@ export default function PerfilPage() {
               cidade: data.userInfo.cidade || "",
               estado: data.userInfo.estado || "",
               pais: data.userInfo.pais || "Brasil",
-            }
-          }))
+            },
+          }));
         }
       }
     } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error)
+      console.error("Erro ao buscar informações do usuário:", error);
     }
-  }
+  };
 
   // Evita problemas de hidratação
   if (!mounted) {
@@ -134,13 +158,13 @@ export default function PerfilPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   const handleSalvarDadosGerais = async () => {
     try {
-      setIsLoading(true)
-      
+      setIsLoading(true);
+
       const response = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: {
@@ -149,7 +173,9 @@ export default function PerfilPage() {
         body: JSON.stringify({
           name: dadosGerais.nome,
           phone: dadosGerais.telefone,
-          birthdate: dadosGerais.dataNascimento ? new Date(dadosGerais.dataNascimento).toISOString() : null,
+          birthdate: dadosGerais.dataNascimento
+            ? new Date(dadosGerais.dataNascimento).toISOString()
+            : null,
           userInfo: {
             bio: dadosGerais.bio,
             cep: dadosGerais.endereco.cep,
@@ -157,39 +183,39 @@ export default function PerfilPage() {
             cidade: dadosGerais.endereco.cidade,
             estado: dadosGerais.endereco.estado,
             pais: dadosGerais.endereco.pais,
-          }
+          },
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         toast({
           title: "Sucesso",
           description: "Informações atualizadas com sucesso!",
-        })
+        });
         // Atualizar o estado local
         if (data.userInfo) {
-          setUserInfo(data.userInfo)
+          setUserInfo(data.userInfo);
         }
       } else {
         toast({
           title: "Erro",
           description: data.error || "Erro ao atualizar informações",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
-      console.error("Erro ao atualizar informações:", error)
+      console.error("Erro ao atualizar informações:", error);
       toast({
         title: "Erro",
         description: "Erro ao atualizar informações",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleAlterarSenha = async () => {
     if (senhas.novaSenha !== senhas.confirmarSenha) {
@@ -197,21 +223,21 @@ export default function PerfilPage() {
         title: "Erro",
         description: "As senhas não coincidem!",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
     if (senhas.novaSenha.length < 6) {
       toast({
         title: "Erro",
         description: "A nova senha deve ter pelo menos 6 caracteres!",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     try {
-      setIsLoading(true)
-      
+      setIsLoading(true);
+
       const response = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: {
@@ -221,88 +247,87 @@ export default function PerfilPage() {
           currentPassword: senhas.senhaAtual,
           newPassword: senhas.novaSenha,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setSenhas({ senhaAtual: "", novaSenha: "", confirmarSenha: "" })
+        setSenhas({ senhaAtual: "", novaSenha: "", confirmarSenha: "" });
         toast({
           title: "Sucesso",
           description: "Senha alterada com sucesso!",
-        })
+        });
       } else {
         toast({
           title: "Erro",
           description: data.error || "Erro ao alterar senha",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
-      console.error("Erro ao alterar senha:", error)
+      console.error("Erro ao alterar senha:", error);
       toast({
         title: "Erro",
         description: "Erro ao alterar senha",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRemoverCartao = (id: number) => {
     if (confirm("Tem certeza que deseja remover este cartão?")) {
       // Simular remoção
-      alert("Cartão removido com sucesso!")
+      alert("Cartão removido com sucesso!");
     }
-  }
+  };
 
   const handleDefinirPrincipal = (id: number) => {
     // Simular definir como principal
-    alert("Cartão definido como principal!")
-  }
+    alert("Cartão definido como principal!");
+  };
 
   async function handleOpenStripePortal() {
     try {
-      setIsStripeLoading(true)
+      setIsStripeLoading(true);
       const res = await fetch("/api/stripe/create-portal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Optional: include a customerId if you have it in session/context
         body: JSON.stringify({}),
-      })
+      });
       if (!res.ok) {
-        throw new Error("Falha ao criar sessão do Portal de Cobrança")
+        throw new Error("Falha ao criar sessão do Portal de Cobrança");
       }
-      const data = await res.json()
+      const data = await res.json();
       if (data?.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       } else {
-        alert("Não foi possível abrir o portal da Stripe.")
+        alert("Não foi possível abrir o portal da Stripe.");
       }
     } catch (e) {
-      alert("Erro ao redirecionar para a Stripe. Tente novamente.")
+      alert("Erro ao redirecionar para a Stripe. Tente novamente.");
     } finally {
-      setIsStripeLoading(false)
+      setIsStripeLoading(false);
     }
   }
 
   const getBandeiraIcon = (bandeira: string) => {
     switch (bandeira.toLowerCase()) {
       case "visa":
-        return "💳"
+        return "💳";
       case "mastercard":
-        return "💳"
+        return "💳";
       case "amex":
-        return "💳"
+        return "💳";
       default:
-        return "💳"
+        return "💳";
     }
-  }
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="dados-gerais" className="flex items-center gap-2">
@@ -335,7 +360,9 @@ export default function PerfilPage() {
                   <Input
                     id="nome"
                     value={dadosGerais.nome}
-                    onChange={(e) => setDadosGerais({ ...dadosGerais, nome: e.target.value })}
+                    onChange={(e) =>
+                      setDadosGerais({ ...dadosGerais, nome: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -358,7 +385,12 @@ export default function PerfilPage() {
                     <Input
                       id="telefone"
                       value={dadosGerais.telefone}
-                      onChange={(e) => setDadosGerais({ ...dadosGerais, telefone: e.target.value })}
+                      onChange={(e) =>
+                        setDadosGerais({
+                          ...dadosGerais,
+                          telefone: e.target.value,
+                        })
+                      }
                       className="pl-10"
                     />
                   </div>
@@ -371,7 +403,12 @@ export default function PerfilPage() {
                       id="dataNascimento"
                       type="date"
                       value={dadosGerais.dataNascimento}
-                      onChange={(e) => setDadosGerais({ ...dadosGerais, dataNascimento: e.target.value })}
+                      onChange={(e) =>
+                        setDadosGerais({
+                          ...dadosGerais,
+                          dataNascimento: e.target.value,
+                        })
+                      }
                       className="pl-10"
                     />
                   </div>
@@ -383,7 +420,9 @@ export default function PerfilPage() {
                 <Textarea
                   id="bio"
                   value={dadosGerais.bio}
-                  onChange={(e) => setDadosGerais({ ...dadosGerais, bio: e.target.value })}
+                  onChange={(e) =>
+                    setDadosGerais({ ...dadosGerais, bio: e.target.value })
+                  }
                   rows={3}
                   placeholder="Conte um pouco sobre você..."
                 />
@@ -408,7 +447,10 @@ export default function PerfilPage() {
                     onChange={(e) =>
                       setDadosGerais({
                         ...dadosGerais,
-                        endereco: { ...dadosGerais.endereco, cep: e.target.value },
+                        endereco: {
+                          ...dadosGerais.endereco,
+                          cep: e.target.value,
+                        },
                       })
                     }
                   />
@@ -421,7 +463,10 @@ export default function PerfilPage() {
                     onChange={(e) =>
                       setDadosGerais({
                         ...dadosGerais,
-                        endereco: { ...dadosGerais.endereco, rua: e.target.value },
+                        endereco: {
+                          ...dadosGerais.endereco,
+                          rua: e.target.value,
+                        },
                       })
                     }
                   />
@@ -434,7 +479,10 @@ export default function PerfilPage() {
                     onChange={(e) =>
                       setDadosGerais({
                         ...dadosGerais,
-                        endereco: { ...dadosGerais.endereco, cidade: e.target.value },
+                        endereco: {
+                          ...dadosGerais.endereco,
+                          cidade: e.target.value,
+                        },
                       })
                     }
                   />
@@ -467,8 +515,8 @@ export default function PerfilPage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button 
-              onClick={handleSalvarDadosGerais} 
+            <Button
+              onClick={handleSalvarDadosGerais}
               disabled={isLoading || !dadosGerais.nome.trim()}
             >
               {isLoading ? (
@@ -503,7 +551,9 @@ export default function PerfilPage() {
                     id="senhaAtual"
                     type={showCurrentPassword ? "text" : "password"}
                     value={senhas.senhaAtual}
-                    onChange={(e) => setSenhas({ ...senhas, senhaAtual: e.target.value })}
+                    onChange={(e) =>
+                      setSenhas({ ...senhas, senhaAtual: e.target.value })
+                    }
                     className="pr-10"
                   />
                   <Button
@@ -513,7 +563,11 @@ export default function PerfilPage() {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
-                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showCurrentPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -525,7 +579,9 @@ export default function PerfilPage() {
                     id="novaSenha"
                     type={showNewPassword ? "text" : "password"}
                     value={senhas.novaSenha}
-                    onChange={(e) => setSenhas({ ...senhas, novaSenha: e.target.value })}
+                    onChange={(e) =>
+                      setSenhas({ ...senhas, novaSenha: e.target.value })
+                    }
                     className="pr-10"
                   />
                   <Button
@@ -535,10 +591,16 @@ export default function PerfilPage() {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres</p>
+                <p className="text-xs text-muted-foreground">
+                  Mínimo de 6 caracteres
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -548,7 +610,9 @@ export default function PerfilPage() {
                     id="confirmarSenha"
                     type={showConfirmPassword ? "text" : "password"}
                     value={senhas.confirmarSenha}
-                    onChange={(e) => setSenhas({ ...senhas, confirmarSenha: e.target.value })}
+                    onChange={(e) =>
+                      setSenhas({ ...senhas, confirmarSenha: e.target.value })
+                    }
                     className="pr-10"
                   />
                   <Button
@@ -558,17 +622,21 @@ export default function PerfilPage() {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
 
-              <Button 
-                onClick={handleAlterarSenha} 
+              <Button
+                onClick={handleAlterarSenha}
                 disabled={
-                  isLoading || 
-                  !senhas.senhaAtual || 
-                  !senhas.novaSenha || 
+                  isLoading ||
+                  !senhas.senhaAtual ||
+                  !senhas.novaSenha ||
                   senhas.novaSenha.length < 6 ||
                   senhas.novaSenha !== senhas.confirmarSenha
                 }
@@ -586,62 +654,16 @@ export default function PerfilPage() {
                 )}
               </Button>
               {senhas.novaSenha.length > 0 && senhas.novaSenha.length < 6 && (
-                <p className="text-sm text-red-500">A senha deve ter pelo menos 6 caracteres</p>
+                <p className="text-sm text-red-500">
+                  A senha deve ter pelo menos 6 caracteres
+                </p>
               )}
-              {senhas.confirmarSenha.length > 0 && senhas.confirmarSenha !== senhas.novaSenha && (
-                <p className="text-sm text-red-500">As senhas não coincidem</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Configurações de Segurança
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Autenticação de Dois Fatores</Label>
-                  <p className="text-sm text-muted-foreground">Adicione uma camada extra de segurança à sua conta</p>
-                </div>
-                <Switch
-                  checked={configuracoesSecurity.autenticacaoDoisFatores}
-                  onCheckedChange={(checked) =>
-                    setConfiguracoesSecurity({ ...configuracoesSecurity, autenticacaoDoisFatores: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Notificação de Login</Label>
-                  <p className="text-sm text-muted-foreground">Receba email quando alguém fizer login na sua conta</p>
-                </div>
-                <Switch
-                  checked={configuracoesSecurity.notificacaoLogin}
-                  onCheckedChange={(checked) =>
-                    setConfiguracoesSecurity({ ...configuracoesSecurity, notificacaoLogin: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Sessão Única</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Desconecte automaticamente de outros dispositivos ao fazer login
+              {senhas.confirmarSenha.length > 0 &&
+                senhas.confirmarSenha !== senhas.novaSenha && (
+                  <p className="text-sm text-red-500">
+                    As senhas não coincidem
                   </p>
-                </div>
-                <Switch
-                  checked={configuracoesSecurity.sessaoUnica}
-                  onCheckedChange={(checked) =>
-                    setConfiguracoesSecurity({ ...configuracoesSecurity, sessaoUnica: checked })
-                  }
-                />
-              </div>
+                )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -658,11 +680,15 @@ export default function PerfilPage() {
             <CardContent className="space-y-4">
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-900">
-                  O gerenciamento de cartões e métodos de pagamento é feito diretamente na Stripe.
-                  Clique no botão abaixo para acessar sua área segura e atualizar, adicionar ou remover cartões.
+                  O gerenciamento de cartões e métodos de pagamento é feito
+                  diretamente na Stripe. Clique no botão abaixo para acessar sua
+                  área segura e atualizar, adicionar ou remover cartões.
                 </p>
               </div>
-              <Button onClick={handleOpenStripePortal} disabled={isStripeLoading}>
+              <Button
+                onClick={handleOpenStripePortal}
+                disabled={isStripeLoading}
+              >
                 {isStripeLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -676,7 +702,8 @@ export default function PerfilPage() {
                 )}
               </Button>
               <p className="text-xs text-muted-foreground">
-                Você será redirecionado para o portal de faturamento da Stripe em uma nova página segura.
+                Você será redirecionado para o portal de faturamento da Stripe
+                em uma nova página segura.
               </p>
             </CardContent>
           </Card>
@@ -691,17 +718,20 @@ export default function PerfilPage() {
             <CardContent className="space-y-3">
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>Segurança:</strong> Seus dados de pagamento são criptografados e protegidos por SSL na Stripe.
+                  <strong>Segurança:</strong> Seus dados de pagamento são
+                  criptografados e protegidos por SSL na Stripe.
                 </p>
               </div>
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-800">
-                  <strong>Cobrança:</strong> O cartão principal definido na Stripe será usado para renovações automáticas.
+                  <strong>Cobrança:</strong> O cartão principal definido na
+                  Stripe será usado para renovações automáticas.
                 </p>
               </div>
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
-                  <strong>Cancelamento:</strong> Você pode gerenciar sua assinatura direto pelo portal da Stripe.
+                  <strong>Cancelamento:</strong> Você pode gerenciar sua
+                  assinatura direto pelo portal da Stripe.
                 </p>
               </div>
             </CardContent>
@@ -709,5 +739,5 @@ export default function PerfilPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

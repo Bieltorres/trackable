@@ -75,7 +75,19 @@ export function Categories({
           >
             <CardContent className="p-4 mt-5">
               <div className="flex items-center justify-between mb-3">
-                <div className={cn("p-2 rounded-lg", categoria.cor)}>
+                <div
+                  className={cn(
+                    "p-2 rounded-lg",
+                    categoria.cor?.startsWith("#") || categoria.cor?.startsWith("rgb")
+                      ? undefined
+                      : categoria.cor || "bg-primary"
+                  )}
+                  style={
+                    categoria.cor?.startsWith("#") || categoria.cor?.startsWith("rgb")
+                      ? { backgroundColor: categoria.cor }
+                      : undefined
+                  }
+                >
                   <categoria.icon className="h-5 w-5 text-white" />
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />

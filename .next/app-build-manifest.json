@@ -56,6 +56,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/me/route.js"
     ],
+    "/api/usuarios/meus-cursos/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/usuarios/meus-cursos/route.js"
+    ],
     "/api/cursos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -66,20 +71,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/favoritos/route.js"
     ],
-    "/api/usuarios/meus-cursos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/usuarios/meus-cursos/route.js"
-    ],
     "/(private)/admin/config/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(private)/admin/config/page.js"
-    ],
-    "/api/admin/cursos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/admin/cursos/route.js"
     ],
     "/api/admin/aulas/route": [
       "static/chunks/webpack.js",
@@ -91,6 +86,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/admin/modulos/route.js"
     ],
+    "/api/admin/cursos/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/admin/cursos/route.js"
+    ],
     "/api/admin/categorias/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -101,25 +101,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/admin/instrutores/route.js"
     ],
-    "/api/upload/route": [
+    "/api/admin/alunos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/upload/route.js"
+      "static/chunks/app/api/admin/alunos/route.js"
     ],
-    "/api/admin/aulas/[id]/route": [
+    "/(private)/progresso/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/admin/aulas/[id]/route.js"
+      "static/chunks/app/(private)/progresso/page.js"
     ],
     "/api/auth/logout/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/logout/route.js"
-    ],
-    "/api/cursos/[id]/player/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/cursos/[id]/player/route.js"
     ],
     "/(private)/curso/[id]/aula/[aulaId]/loading": [
       "static/chunks/webpack.js",
@@ -131,15 +126,75 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(private)/curso/[id]/aula/[aulaId]/page.js"
     ],
+    "/api/cursos/public/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/cursos/public/[id]/route.js"
+    ],
+    "/api/cursos/[id]/avaliacoes/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/cursos/[id]/avaliacoes/route.js"
+    ],
+    "/api/cursos/[id]/player/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/cursos/[id]/player/route.js"
+    ],
     "/api/cursos/[id]/aula/[aulaId]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/cursos/[id]/aula/[aulaId]/route.js"
     ],
-    "/api/files/download/route": [
+    "/(private)/suporte/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/files/download/route.js"
+      "static/chunks/app/(private)/suporte/page.js"
+    ],
+    "/(private)/perfil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/perfil/page.js"
+    ],
+    "/api/auth/user-info/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/user-info/route.js"
+    ],
+    "/api/categorias/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/categorias/route.js"
+    ],
+    "/(private)/cursos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/cursos/page.js"
+    ],
+    "/(private)/dashboard/cursos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/dashboard/cursos/page.js"
+    ],
+    "/(private)/anotacoes/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/anotacoes/loading.js"
+    ],
+    "/(private)/anotacoes/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(private)/anotacoes/page.js"
+    ],
+    "/api/anotacoes/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/anotacoes/route.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

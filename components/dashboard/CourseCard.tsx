@@ -131,43 +131,53 @@ export function CourseCard({
 
       {/* Badges no topo */}
       <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-        <div className="flex flex-col gap-2">
-          {/* Badges especiais */}
-          {curso.adquirido ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorito(curso.id);
-              }}
-              className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors self-start"
-              title={
-                isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"
-              }
-            >
-              <Heart
-                className={cn(
-                  "h-4 w-4 transition-colors",
-                  isFavorito
-                    ? "text-red-500 fill-red-500"
-                    : "text-white hover:text-red-300"
-                )}
-              />
-            </button>
-          ) : (
-            <div className="flex flex-col gap-1">{getSpecialBadges(curso)}</div>
-          )}
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorito(curso.id);
+            }}
+            className="p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+            title={
+              isFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"
+            }
+            aria-label={
+              isFavorito
+                ? "Remover curso dos favoritos"
+                : "Adicionar curso aos favoritos"
+            }
+          >
+            <Heart
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isFavorito
+                  ? "text-red-500 fill-red-500"
+                  : "text-white hover:text-red-300"
+              )}
+            />
+          </button>
+
+          <div className="flex flex-col gap-2">
+            {!curso.adquirido && (
+              <div className="flex flex-col gap-1">
+                {getSpecialBadges(curso)}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Status badge */}
-        <div>
-          {curso.adquirido ? (
-            getStatusBadge(curso.status)
-          ) : (
-            <Badge className="bg-green-500 text-white shadow-lg">
-              <ShoppingCart className="h-3 w-3 mr-1" />
-              Disponível
-            </Badge>
-          )}
+        <div className="flex items-center gap-2">
+          {/* Status badge */}
+          <div>
+            {curso.adquirido ? (
+              getStatusBadge(curso.status)
+            ) : (
+              <Badge className="bg-green-500 text-white shadow-lg">
+                <ShoppingCart className="h-3 w-3 mr-1" />
+                Disponível
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 

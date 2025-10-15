@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Shield,
   User,
+  BookOpen,
 } from "lucide-react";
 import React from "react";
 
@@ -64,6 +65,7 @@ export default function PrivateLayout({
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: BookOpen, label: "Catalogo de Cursos", href: "/dashboard/cursos" },
     { icon: BarChart3, label: "Progresso", href: "/progresso" },
     { icon: FileText, label: "Anotações", href: "/anotacoes" },
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },

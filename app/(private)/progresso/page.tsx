@@ -65,39 +65,67 @@ export default function ProgressPage() {
     return filtered;
   }, [meusCursos, searchTerm, statusFilter, sortBy]);
 
-  // Função para calcular total de aulas
-  const getTotalAulas = (curso: any) => {
-    return curso.modulos?.reduce((total: number, modulo: any) => 
-      total + (modulo.aulas?.length || 0), 0) || 0;
+  const getOrderedAulas = (curso: any) => {
+    if (!curso?.modulos?.length) return [];
+
+    return curso.modulos
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          (a?.ordem ?? Number.MAX_SAFE_INTEGER) - (b?.ordem ?? Number.MAX_SAFE_INTEGER)
+      )
+      .flatMap((modulo: any) =>
+        (modulo?.aulas ?? [])
+          .slice()
+          .sort(
+            (a: any, b: any) =>
+              (a?.ordem ?? Number.MAX_SAFE_INTEGER) -
+              (b?.ordem ?? Number.MAX_SAFE_INTEGER)
+          )
+      );
   };
 
-  // Função para calcular aulas concluídas (estimativa baseada no progresso)
-  const getAulasConcluidas = (curso: any, progresso: number) => {
-    const totalAulas = getTotalAulas(curso);
-    return Math.floor((totalAulas * progresso) / 100);
+  const getAulasAssistidas = (usuarioCurso: any, orderedAulas: any[]) => {
+    const registros = usuarioCurso?.usuarioCursoAulas ?? [];
+
+    if (registros.length > 0) {
+      return registros.filter((registro: any) => registro.assistido).length;
+    }
+
+    const progresso = usuarioCurso?.progresso ?? 0;
+    return Math.floor((orderedAulas.length * progresso) / 100);
   };
 
-  // Função para obter a próxima aula baseada no progresso
-  const getProximaAula = (curso: any, progresso: number) => {
-    if (!curso.modulos || curso.modulos.length === 0) return null;
-    
-    const totalAulas = getTotalAulas(curso);
-    const aulasConcluidas = Math.floor((totalAulas * progresso) / 100);
-    
-    let aulaAtual = 0;
-    for (const modulo of curso.modulos) {
-      if (!modulo.aulas) continue;
-      
-      for (const aula of modulo.aulas) {
-        if (aulaAtual === aulasConcluidas) {
-          return aula.id;
-        }
-        aulaAtual++;
+  const getProximaAulaId = (usuarioCurso: any, orderedAulas: any[]) => {
+    if (!orderedAulas.length) return null;
+
+    const registros = usuarioCurso?.usuarioCursoAulas ?? [];
+
+    if (registros.length === 0) {
+      const progresso = usuarioCurso?.progresso ?? 0;
+      const indiceEstimado = Math.min(
+        orderedAulas.length - 1,
+        Math.floor((orderedAulas.length * progresso) / 100)
+      );
+      return orderedAulas[Math.max(0, indiceEstimado)]?.id ?? null;
+    }
+
+    const mapaRegistros = new Map(
+      registros.map((registro: any) => [registro.aulaId, registro])
+    );
+
+    for (const aula of orderedAulas) {
+      const registro = mapaRegistros.get(aula.id);
+      if (!registro) {
+        return aula.id;
+      }
+
+      if (!registro.assistido) {
+        return aula.id;
       }
     }
-    
-    // Se chegou aqui, retorna a primeira aula do primeiro módulo
-    return curso.modulos[0]?.aulas?.[0]?.id || null;
+
+    return orderedAulas[orderedAulas.length - 1]?.id ?? null;
   };
 
   if (loading) {
@@ -140,7 +168,7 @@ export default function ProgressPage() {
               Você ainda não iniciou nenhum curso. Explore nosso catálogo e comece sua jornada de aprendizado!
             </p>
             <Button asChild>
-              <Link href="/cursos">Explorar Cursos</Link>
+              <Link href="/dashboard/cursos">Explorar Cursos</Link>
             </Button>
           </CardContent>
         </Card>
@@ -232,8 +260,16 @@ export default function ProgressPage() {
           {/* Lista de Cursos */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {cursosFiltered.map((uc) => {
-              const totalAulas = getTotalAulas(uc.curso);
-              const aulasConcluidas = getAulasConcluidas(uc.curso, uc.progresso || 0);
+              const orderedAulas = getOrderedAulas(uc.curso);
+              const totalAulas = orderedAulas.length;
+              const aulasAssistidas = getAulasAssistidas(uc, orderedAulas);
+              const proximaAulaId = getProximaAulaId(uc, orderedAulas);
+              const continuarHref =
+                uc.status === "nao-iniciado"
+                  ? `/curso/${uc.curso.id}`
+                  : proximaAulaId
+                  ? `/curso/${uc.curso.id}/aula/${proximaAulaId}`
+                  : `/curso/${uc.curso.id}`;
               
               return (
                 <Card key={uc.id} className="shadow-md hover:shadow-lg transition-all">
@@ -277,7 +313,7 @@ export default function ProgressPage() {
                       {totalAulas > 0 && (
                         <div className="flex items-center gap-2">
                           <PlayCircle className="h-4 w-4" />
-                          <span>{aulasConcluidas} de {totalAulas} aulas</span>
+                          <span>{aulasAssistidas} de {totalAulas} aulas</span>
                         </div>
                       )}
                     </div>
@@ -294,11 +330,7 @@ export default function ProgressPage() {
                     {/* Ações */}
                     <div className="flex gap-2 pt-2">
                       <Button asChild className="flex-1" size="sm">
-                        <Link href={
-                          uc.status === "nao-iniciado" 
-                            ? `/curso/${uc.curso.id}` 
-                            : `/curso/${uc.curso.id}/aula/${getProximaAula(uc.curso, uc.progresso || 0) || ''}`
-                        }>
+                        <Link href={continuarHref}>
                           {uc.status === "nao-iniciado" ? "Iniciar Curso" : "Continuar"}
                         </Link>
                       </Button>
@@ -332,3 +364,5 @@ export default function ProgressPage() {
     </div>
   );
 }
+
+

@@ -1,8 +1,16 @@
 {
-  "/api/files/download/route": "app/api/files/download/route.js",
-  "/api/cursos/[id]/aula/[aulaId]/route": "app/api/cursos/[id]/aula/[aulaId]/route.js",
-  "/(public)/login/page": "app/(public)/login/page.js",
-  "/(private)/admin/config/page": "app/(private)/admin/config/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/api/cursos/route": "app/api/cursos/route.js",
+  "/api/usuarios/meus-cursos/route": "app/api/usuarios/meus-cursos/route.js",
+  "/api/favoritos/route": "app/api/favoritos/route.js",
+  "/api/categorias/route": "app/api/categorias/route.js",
+  "/api/anotacoes/route": "app/api/anotacoes/route.js",
+  "/page": "app/page.js",
+  "/(private)/progresso/page": "app/(private)/progresso/page.js",
+  "/(private)/anotacoes/page": "app/(private)/anotacoes/page.js",
   "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
-  "/(private)/curso/[id]/aula/[aulaId]/page": "app/(private)/curso/[id]/aula/[aulaId]/page.js"
+  "/(private)/dashboard/cursos/page": "app/(private)/dashboard/cursos/page.js",
+  "/(public)/login/page": "app/(public)/login/page.js"
 }

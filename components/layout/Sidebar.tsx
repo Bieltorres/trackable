@@ -42,8 +42,25 @@ export default function Sidebar({
 
   // Helper para verificar se a rota está ativa
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(href + "/");
+    const normalizedHref = href.endsWith("/")
+      ? href.slice(0, -1)
+      : href;
+    const normalizedPathname = pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+
+    if (normalizedHref === "/") {
+      return normalizedPathname === "/";
+    }
+
+    if (normalizedHref === "/dashboard") {
+      return normalizedPathname === "/dashboard";
+    }
+
+    return (
+      normalizedPathname === normalizedHref ||
+      normalizedPathname.startsWith(`${normalizedHref}/`)
+    );
   };
 
   return (

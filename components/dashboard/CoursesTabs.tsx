@@ -86,12 +86,19 @@ export function CoursesTabs({
       onValueChange={onTabChange}
       className="flex-1 flex flex-col"
     >
-      <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
+      <TabsList className="grid w-full grid-cols-6 flex-shrink-0">
         <TabsTrigger value="todos">
           Todos ({cursosFiltrados.length})
         </TabsTrigger>
         <TabsTrigger value="meus-cursos">
           Meus Cursos ({cursosFiltrados.filter((c) => c.adquirido).length})
+        </TabsTrigger>
+        <TabsTrigger value="favoritos">
+          Favoritos (
+          {
+            cursosFiltrados.filter((c) => cursosFavoritos.includes(c.id)).length
+          }
+          )
         </TabsTrigger>
         <TabsTrigger value="em-andamento">
           Em Andamento (

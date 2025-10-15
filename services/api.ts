@@ -89,14 +89,25 @@ class ApiService {
   }
 
   // Anotações
-  async getAnotacoes(): Promise<ApiResponse<Anotacao[]>> {
-    return this.request<ApiResponse<Anotacao[]>>("/anotacoes");
+  async getAnotacoes(params?: {
+    cursoId?: string;
+    aulaId?: string;
+  }): Promise<ApiResponse<Anotacao[]>> {
+    const searchParams = new URLSearchParams();
+    if (params?.cursoId) searchParams.append("cursoId", params.cursoId);
+    if (params?.aulaId) searchParams.append("aulaId", params.aulaId);
+
+    const query = searchParams.toString();
+    return this.request<ApiResponse<Anotacao[]>>(
+      `/anotacoes${query ? `?${query}` : ""}`
+    );
   }
 
   async createAnotacao(data: {
     titulo: string;
     conteudo: string;
     cursoId: string;
+    aulaId?: string;
     cor?: string;
     corTexto?: string;
   }): Promise<ApiResponse<Anotacao>> {

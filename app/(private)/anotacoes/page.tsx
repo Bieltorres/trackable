@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -25,97 +25,6 @@ import { cn } from "@/lib/utils"
 import { UserSettingsModal } from "@/components/user-settings-modal"
 import { AdminConfigModal } from "@/components/admin-config-modal"
 
-// Dados simulados das anotações
-const anotacoes = [
-  {
-    id: 1,
-    titulo: "Estratégias de Segmentação",
-    conteudo:
-      "Pontos importantes sobre segmentação de público:\n\n• Definir personas claras\n• Usar dados demográficos e comportamentais\n• Testar diferentes segmentos\n• Analisar performance por segmento",
-    curso: "Marketing Digital Completo",
-    aula: "Segmentação de Público Avançada",
-    categoria: "Marketing",
-    data: "2024-01-20",
-    tempo: "15:30",
-    duracaoAula: "45min",
-    cor: "bg-blue-100",
-    corTexto: "text-blue-800",
-  },
-  {
-    id: 2,
-    titulo: "Técnicas de Fechamento",
-    conteudo:
-      "Principais técnicas para fechar vendas:\n\n1. Assumir a venda\n2. Criar urgência genuína\n3. Oferecer alternativas\n4. Usar prova social\n5. Fazer perguntas de confirmação",
-    curso: "Vendas de Alto Impacto",
-    aula: "Técnicas de Fechamento Avançadas",
-    categoria: "Vendas",
-    data: "2024-01-22",
-    tempo: "28:15",
-    duracaoAula: "52min",
-    cor: "bg-green-100",
-    corTexto: "text-green-800",
-  },
-  {
-    id: 3,
-    titulo: "Headlines que Convertem",
-    conteudo:
-      "Fórmulas de headlines testadas:\n\n• Como [fazer algo] em [tempo] sem [objeção]\n• [Número] maneiras de [benefício]\n• O segredo de [autoridade] para [resultado]\n• Por que [crença comum] está errada",
-    curso: "Copywriting Persuasivo",
-    aula: "Criando Headlines Irresistíveis",
-    categoria: "Copywriting",
-    data: "2024-01-25",
-    tempo: "12:45",
-    duracaoAula: "38min",
-    cor: "bg-purple-100",
-    corTexto: "text-purple-800",
-  },
-  {
-    id: 4,
-    titulo: "Métricas Essenciais",
-    conteudo:
-      "KPIs mais importantes para acompanhar:\n\n📊 CTR (Click-Through Rate)\n📊 CPC (Custo Por Clique)\n📊 ROAS (Return on Ad Spend)\n📊 LTV (Lifetime Value)\n📊 CAC (Custo de Aquisição)",
-    curso: "Marketing Digital Completo",
-    aula: "Análise de Métricas e KPIs",
-    categoria: "Marketing",
-    data: "2024-01-28",
-    tempo: "22:10",
-    duracaoAula: "41min",
-    cor: "bg-blue-100",
-    corTexto: "text-blue-800",
-  },
-  {
-    id: 5,
-    titulo: "Objeções Comuns",
-    conteudo:
-      "Como lidar com as principais objeções:\n\n💰 'Está muito caro' → Mostrar valor e ROI\n⏰ 'Não tenho tempo' → Demonstrar economia de tempo\n🤔 'Preciso pensar' → Criar urgência genuína\n❓ 'Não funciona para mim' → Casos de sucesso similares",
-    curso: "Vendas de Alto Impacto",
-    aula: "Tratamento de Objeções",
-    categoria: "Vendas",
-    data: "2024-02-01",
-    tempo: "35:20",
-    duracaoAula: "48min",
-    cor: "bg-green-100",
-    corTexto: "text-green-800",
-  },
-  {
-    id: 6,
-    titulo: "Gatilhos Mentais",
-    conteudo:
-      "Principais gatilhos para usar em copy:\n\n🔥 Escassez - Limitação de tempo/quantidade\n👥 Prova Social - Depoimentos e números\n⚡ Urgência - Ação imediata necessária\n🎯 Autoridade - Credibilidade do emissor\n💝 Reciprocidade - Dar antes de pedir",
-    curso: "Copywriting Persuasivo",
-    aula: "Gatilhos Mentais na Prática",
-    categoria: "Copywriting",
-    data: "2024-02-03",
-    tempo: "18:55",
-    duracaoAula: "44min",
-    cor: "bg-purple-100",
-    corTexto: "text-purple-800",
-  },
-]
-
-const categorias = ["Todas", "Marketing", "Vendas", "Copywriting"]
-const cursos = ["Todos", "Marketing Digital Completo", "Vendas de Alto Impacto", "Copywriting Persuasivo"]
-
 // Simular usuário admin
 const isAdmin = true
 
@@ -128,6 +37,9 @@ const menuItems = [
 ]
 
 export default function AnotacoesPage() {
+  const [anotacoes, setAnotacoes] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategoria, setSelectedCategoria] = useState("Todas")
   const [selectedCurso, setSelectedCurso] = useState("Todos")
@@ -136,6 +48,82 @@ export default function AnotacoesPage() {
   const [anotacaoSelecionada, setAnotacaoSelecionada] = useState<any>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false)
+
+  useEffect(() => {
+    const fetchAnotacoes = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch("/api/anotacoes")
+
+        if (!response.ok) {
+          throw new Error("Não foi possível carregar suas anotações.")
+        }
+
+        const payload = await response.json()
+        const data: any[] = payload?.data ?? []
+
+        const mapped = data.map((item) => {
+          const createdAt =
+            item.dataCriacao || item.createdAt || item.updatedAt || new Date().toISOString()
+          const dataObj = new Date(createdAt)
+          const cursoTitulo = item.curso?.titulo ?? "Curso nao informado"
+          const categoriaNome = item.curso?.categoria?.nome ?? "Geral"
+          const aulaTitulo = item.aula?.titulo ?? "Aula nao informada"
+
+          return {
+            id: item.id,
+            titulo: item.titulo,
+            conteudo: item.conteudo,
+            cursoId: item.curso?.id ?? null,
+            curso: cursoTitulo,
+            aulaId: item.aula?.id ?? null,
+            aula: aulaTitulo,
+            categoria: categoriaNome,
+            data: createdAt,
+            tempo: dataObj.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            duracaoAula: item.duracaoAula ?? "",
+            cor: item.cor || "bg-amber-100",
+            corTexto: item.corTexto || "text-amber-900",
+          }
+        })
+
+        setAnotacoes(mapped)
+        setError(null)
+      } catch (err) {
+        console.error("Erro ao carregar anotações:", err)
+        setError(
+          err instanceof Error ? err.message : "Erro inesperado ao carregar suas anotações.",
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAnotacoes()
+  }, [])
+
+  const categorias = useMemo(() => {
+    const unique = new Set<string>()
+    anotacoes.forEach((anotacao) => {
+      if (anotacao.categoria) {
+        unique.add(anotacao.categoria)
+      }
+    })
+    return ["Todas", ...Array.from(unique).sort()]
+  }, [anotacoes])
+
+  const cursos = useMemo(() => {
+    const unique = new Set<string>()
+    anotacoes.forEach((anotacao) => {
+      if (anotacao.curso) {
+        unique.add(anotacao.curso)
+      }
+    })
+    return ["Todos", ...Array.from(unique).sort()]
+  }, [anotacoes])
 
   const handleMenuClick = (item: any) => {
     if (item.isAdmin) {
@@ -154,15 +142,29 @@ export default function AnotacoesPage() {
   })
 
   const anotacoesPorPagina = 6
-  const totalPaginas = Math.ceil(anotacoesFiltradas.length / anotacoesPorPagina)
+  const totalPaginas = Math.max(1, Math.ceil(anotacoesFiltradas.length / anotacoesPorPagina))
   const anotacoesPagina = anotacoesFiltradas.slice(
     (paginaAtual - 1) * anotacoesPorPagina,
     paginaAtual * anotacoesPorPagina,
   )
 
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [paginaAtual, totalPaginas])
+
   const handleIrParaAula = (anotacao: any) => {
-    // Simular redirecionamento para a aula
-    alert(`Redirecionando para: ${anotacao.curso} - ${anotacao.aula} (${anotacao.tempo})`)
+    if (!anotacao.cursoId) {
+      alert(`Curso nao informado para a anotacao "${anotacao.titulo}".`)
+      return
+    }
+
+    const destino = anotacao.aulaId
+      ? `/curso/${anotacao.cursoId}/aula/${anotacao.aulaId}`
+      : `/curso/${anotacao.cursoId}`
+
+    window.location.href = destino
   }
 
   const formatarData = (data: string) => {
@@ -210,12 +212,21 @@ export default function AnotacoesPage() {
                 <Input
                   placeholder="Buscar nas anotações..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value)
+                    setPaginaAtual(1)
+                  }}
                   className="pl-10 bg-amber-50 border-amber-200 focus:border-amber-400"
                 />
               </div>
               <div className="flex gap-2">
-                <Select value={selectedCategoria} onValueChange={setSelectedCategoria}>
+                <Select
+                  value={selectedCategoria}
+                  onValueChange={(value) => {
+                    setSelectedCategoria(value)
+                    setPaginaAtual(1)
+                  }}
+                >
                   <SelectTrigger className="w-40 bg-amber-50 border-amber-200">
                     <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
@@ -227,7 +238,13 @@ export default function AnotacoesPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={selectedCurso} onValueChange={setSelectedCurso}>
+                <Select
+                  value={selectedCurso}
+                  onValueChange={(value) => {
+                    setSelectedCurso(value)
+                    setPaginaAtual(1)
+                  }}
+                >
                   <SelectTrigger className="w-48 bg-amber-50 border-amber-200">
                     <SelectValue placeholder="Curso" />
                   </SelectTrigger>
@@ -257,8 +274,23 @@ export default function AnotacoesPage() {
 
             {/* Conteúdo das Anotações */}
             <div className="relative z-10 p-6 pl-16">
-              {anotacoesPagina.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Card
+                      key={index}
+                      className="h-44 animate-pulse border-2 border-dashed border-amber-100 bg-amber-50/80"
+                    >
+                      <CardContent />
+                    </Card>
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-red-700">
+                  {error}
+                </div>
+              ) : anotacoesPagina.length > 0 ? (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                   {anotacoesPagina.map((anotacao) => (
                     <Card
                       key={anotacao.id}

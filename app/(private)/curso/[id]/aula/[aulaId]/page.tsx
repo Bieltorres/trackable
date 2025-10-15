@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import {
   Plus,
   Upload,
   Save,
+  NotebookPen,
   Edit3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,11 +31,36 @@ import { useAppSelector } from "@/store/hooks";
 import { useToast } from "@/components/ui/use-toast";
 import { BotaoBaixar } from "@/components/ui/botaoBaixar";
 
+interface AulaAnotacao {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  cursoId: string;
+  aulaId?: string | null;
+  cor: string;
+  corTexto: string;
+  dataCriacao?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  curso?: {
+    id: string;
+    titulo: string;
+  };
+  aula?: {
+    id: string;
+    titulo?: string | null;
+  };
+}
+
 export default function AulaPage() {
   const params = useParams();
   const { user } = useAppSelector((state) => state.user);
   const { toast } = useToast();
   const isAdmin = user?.role === "admin";
+  const cursoId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const aulaId = Array.isArray(params.aulaId)
+    ? params.aulaId[0]
+    : params.aulaId;
 
   // Estados para dados da API
   const [cursoData, setCursoData] = useState<any>(null);
@@ -55,15 +81,56 @@ export default function AulaPage() {
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminConfigOpen, setIsAdminConfigOpen] = useState(false);
-  console.log("AulaPage render");
-  // Buscar dados da aula
+  const [anotacoes, setAnotacoes] = useState<AulaAnotacao[]>([]);
+  const [carregandoAnotacoes, setCarregandoAnotacoes] = useState(false);
+  const [salvandoAnotacao, setSalvandoAnotacao] = useState(false);
+  const [novaAnotacao, setNovaAnotacao] = useState({
+    titulo: "",
+    conteudo: "",
+  });
+
+  const carregarAnotacoes = useCallback(async () => {
+    if (!cursoId) {
+      return;
+    }
+
+    try {
+      setCarregandoAnotacoes(true);
+      const searchParams = new URLSearchParams();
+      searchParams.append("cursoId", cursoId);
+      if (aulaId) {
+        searchParams.append("aulaId", aulaId);
+      }
+
+      const response = await fetch(`/api/anotacoes?${searchParams.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("Erro ao carregar anotacoes");
+      }
+
+      const data = await response.json();
+      setAnotacoes(Array.isArray(data?.data) ? data.data : []);
+    } catch (error) {
+      console.error("Erro ao carregar anotacoes:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar anotacoes",
+        variant: "destructive",
+      });
+    } finally {
+      setCarregandoAnotacoes(false);
+    }
+  }, [cursoId, aulaId, toast]);
+
+  useEffect(() => {
+    carregarAnotacoes();
+  }, [carregarAnotacoes]);
+
   useEffect(() => {
     const fetchAulaData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/cursos/${params.id}/aula/${params.aulaId}`
-        );
+        const response = await fetch(`/api/cursos/${cursoId}/aula/${aulaId}`);
 
         if (!response.ok) {
           throw new Error("Erro ao carregar aula");
@@ -98,10 +165,10 @@ export default function AulaPage() {
       }
     };
 
-    if (params.id && params.aulaId) {
+    if (cursoId && aulaId) {
       fetchAulaData();
     }
-  }, [params.id, params.aulaId, toast]);
+  }, [cursoId, aulaId, toast]);
 
   const toggleModulo = (moduloId: string) => {
     setModulosAbertos((prev) =>
@@ -113,11 +180,6 @@ export default function AulaPage() {
 
   const handleSalvarConteudo = async () => {
     try {
-      // TODO: Implementar API para salvar alterações da aula
-      console.log("Salvando:", {
-        titulo: tituloAula,
-        descricao: descricaoAula,
-      });
       setEditandoConteudo(false);
       toast({
         title: "Sucesso",
@@ -129,6 +191,71 @@ export default function AulaPage() {
         description: "Erro ao salvar conteúdo",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleSalvarAnotacao = async () => {
+    if (!cursoId) {
+      toast({
+        title: "Erro",
+        description: "Curso nao encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      !novaAnotacao.titulo.trim().length ||
+      !novaAnotacao.conteudo.trim().length
+    ) {
+      toast({
+        title: "Atencao",
+        description: "Preencha titulo e conteudo da anotacao",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSalvandoAnotacao(true);
+      const response = await fetch("/api/anotacoes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo: novaAnotacao.titulo.trim(),
+          conteudo: novaAnotacao.conteudo.trim(),
+          cursoId,
+          aulaId: aulaId || null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao salvar anotacao");
+      }
+
+      const data = await response.json();
+      if (data?.data) {
+        setAnotacoes((prev) => [data.data, ...prev]);
+      } else {
+        await carregarAnotacoes();
+      }
+
+      setNovaAnotacao({ titulo: "", conteudo: "" });
+      toast({
+        title: "Sucesso",
+        description: "Anotacao salva com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar anotacao:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar anotacao",
+        variant: "destructive",
+      });
+    } finally {
+      setSalvandoAnotacao(false);
     }
   };
 
@@ -176,6 +303,15 @@ export default function AulaPage() {
       default:
         return "📁";
     }
+  };
+
+  const formatarDataAnotacao = (valor?: string) => {
+    if (!valor) return "";
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) {
+      return "";
+    }
+    return data.toLocaleDateString("pt-BR");
   };
 
   async function handleDownload(arquivo: { key: string; nome: string }) {
@@ -230,7 +366,7 @@ export default function AulaPage() {
   const instrutor = cursoData.instrutores?.[0]?.instrutor;
 
   return (
-    <div className="p-6 h-full bg-gray-50 flex overflow-hidden">
+    <div className="min-h-screen p-6 bg-gray-50 flex overflow-hidden">
       {/* Overlay para mobile */}
       {sidebarOpen && (
         <div
@@ -426,6 +562,114 @@ export default function AulaPage() {
                           </Button>
                         </div>
                       </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Anotacoes da Aula */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center">
+                      <NotebookPen className="h-5 w-5 mr-2" />
+                      Minhas anotacoes
+                    </CardTitle>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Guarde os principais pontos desta aula.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Titulo da anotacao"
+                      value={novaAnotacao.titulo}
+                      onChange={(e) =>
+                        setNovaAnotacao((prev) => ({
+                          ...prev,
+                          titulo: e.target.value,
+                        }))
+                      }
+                    />
+                    <Textarea
+                      placeholder="Escreva os destaques desta aula"
+                      value={novaAnotacao.conteudo}
+                      onChange={(e) =>
+                        setNovaAnotacao((prev) => ({
+                          ...prev,
+                          conteudo: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                    />
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        onClick={handleSalvarAnotacao}
+                        disabled={salvandoAnotacao}
+                      >
+                        {salvandoAnotacao ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Salvando...
+                          </div>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Salvar anotacao
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {carregandoAnotacoes ? (
+                      <div className="flex justify-center py-6">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+                      </div>
+                    ) : anotacoes.length > 0 ? (
+                      anotacoes.map((anotacao) => {
+                        const dataReferencia =
+                          anotacao.dataCriacao ||
+                          anotacao.createdAt ||
+                          anotacao.updatedAt;
+
+                        return (
+                          <div
+                            key={anotacao.id}
+                            className="border rounded-md p-3 bg-gray-50"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">
+                                  {anotacao.titulo}
+                                </h4>
+                                {dataReferencia && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {formatarDataAnotacao(
+                                      dataReferencia as string
+                                    )}
+                                  </p>
+                                )}
+                              </div>
+                              {anotacao.aula?.titulo && (
+                                <span className="text-xs text-gray-500">
+                                  {anotacao.aula.titulo}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 whitespace-pre-line mt-3">
+                              {anotacao.conteudo}
+                            </p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        Nenhuma anotacao registrada para esta aula.
+                      </p>
                     )}
                   </div>
                 </CardContent>

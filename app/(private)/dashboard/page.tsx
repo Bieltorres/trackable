@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Youtube, BarChart, Zap } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import type { ElementType } from "react";
+import * as Icons from "lucide-react";
 import { CourseModal } from "@/components/course-modal";
-import { UserSettingsModal } from "@/components/user-settings-modal";
-import { AdminConfigModal } from "@/components/admin-config-modal";
 import { HeroBanner } from "@/components/dashboard/HeroBanner";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { Categories } from "@/components/dashboard/Categories";
@@ -19,8 +18,23 @@ import {
 import { fetchUserProfile, fetchMeusCursos } from "@/store/slices/userSlice";
 import { Curso } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-
 const niveis = ["Todos", "iniciante", "intermediario", "avancado"];
+
+type CategoriaApi = {
+  id: string;
+  nome: string;
+  cor: string;
+  icone: string;
+  totalCursos: number;
+};
+
+type CategoriaCard = {
+  nome: string;
+  icon: ElementType;
+  cor: string;
+  descricao: string;
+  cursos: number;
+};
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -46,6 +60,8 @@ export default function DashboardPage() {
   ] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Curso | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [categoriasDb, setCategoriasDb] = useState<CategoriaApi[]>([]);
+  const [categoriasDbLoading, setCategoriasDbLoading] = useState(false);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -54,6 +70,33 @@ export default function DashboardPage() {
     dispatch(fetchFavoritos());
     dispatch(fetchMeusCursos());
   }, [dispatch]);
+
+  useEffect(() => {
+    const carregarCategorias = async () => {
+      try {
+        setCategoriasDbLoading(true);
+        const response = await fetch("/api/categorias");
+
+        if (!response.ok) {
+          throw new Error("Falha ao carregar categorias");
+        }
+
+        const data = await response.json();
+        setCategoriasDb(data.categorias ?? []);
+      } catch (error) {
+        console.error("Erro ao carregar categorias:", error);
+        toast({
+          title: "Erro ao carregar categorias",
+          description: "Tente novamente em alguns minutos.",
+          variant: "destructive",
+        });
+      } finally {
+        setCategoriasDbLoading(false);
+      }
+    };
+
+    carregarCategorias();
+  }, []);
 
   const handleToggleFavorito = async (cursoId: string) => {
     try {
@@ -90,21 +133,38 @@ export default function DashboardPage() {
     }
   };
 
-  const handleMenuClick = (item: any) => {
-    if (item.isAdmin) {
-      setIsAdminConfigOpen(true);
-    }
+  const categoriasDisponiveis = useMemo(() => {
+    const nomes = new Set<string>();
+
+    categoriasDb.forEach((categoria) => {
+      if (categoria.nome) {
+        nomes.add(categoria.nome);
+      }
+    });
+
+    cursos.forEach((curso) => {
+      const nomeCategoria =
+        typeof curso.categoria === "string"
+          ? curso.categoria
+          : curso.categoria?.nome;
+
+      if (nomeCategoria) {
+        nomes.add(nomeCategoria);
+      }
+    });
+
+    return ["Todos", ...Array.from(nomes).sort((a, b) => a.localeCompare(b))];
+  }, [categoriasDb, cursos]);
+
+  const handleCategoriaCardSelect = (categoria: string | null) => {
+    setCategoriaPersonalizadaSelecionada(categoria);
+    setSelectedCategory(categoria ?? "Todos");
   };
 
-  // Criar lista de categorias únicas dos cursos
-  const categorias = [
-    "Todos",
-    ...Array.from(
-      new Set(cursos.map((c) => c.categoria?.nome).filter(Boolean))
-    ),
-  ];
-
-  // Mapear cursos com informações de progresso dos meus cursos
+  const handleCategoryFilterChange = (value: string) => {
+    setSelectedCategory(value);
+    setCategoriaPersonalizadaSelecionada(value === "Todos" ? null : value);
+  };
   const cursosComProgresso = cursos.map((curso) => {
     const meuCurso = meusCursos.find((mc) => mc.cursoId === curso.id);
 
@@ -135,6 +195,8 @@ export default function DashboardPage() {
     };
   });
 
+  const cursosFavoritosIds = favoritos.map((f) => f.cursoId);
+
   const cursosFiltrados = cursosComProgresso.filter((curso) => {
     const matchSearch = curso.titulo
       .toLowerCase()
@@ -153,12 +215,12 @@ export default function DashboardPage() {
       matchTab = curso.status === "disponivel" || !curso.adquirido;
     if (activeTab === "nao-iniciados")
       matchTab = curso.status === "nao-iniciado";
+    if (activeTab === "favoritos")
+      matchTab = cursosFavoritosIds.includes(curso.id);
     if (activeTab === "todos") matchTab = true;
 
     return matchSearch && matchCategory && matchNivel && matchTab;
   });
-
-  const cursosFavoritosIds = favoritos.map((f) => f.cursoId);
 
   const estatisticas = {
     cursosAtivos: meusCursos.filter((c) => c.status === "em-andamento").length,
@@ -168,30 +230,37 @@ export default function DashboardPage() {
   };
 
   // Categorias personalizadas baseadas nos dados reais
-  const categoriasPersonalizadas = [
-    {
-      nome: "Material do Youtube",
-      icon: Youtube,
-      cor: "bg-red-500",
-      descricao: "Conteúdos exclusivos e materiais complementares",
-      cursos: cursos.filter((c) => c.categoria?.nome === "Marketing").length,
-    },
-    {
-      nome: "Trackeamento",
-      icon: BarChart,
-      cor: "bg-blue-500",
-      descricao: "Ferramentas e estratégias de análise",
-      cursos: cursos.filter((c) => c.categoria?.nome === "Analytics").length,
-    },
-    {
-      nome: "Automações",
-      icon: Zap,
-      cor: "bg-yellow-500",
-      descricao: "Sistemas automatizados para otimizar processos",
-      cursos: cursos.filter((c) => c.categoria?.nome === "Automação").length,
-    },
-  ];
+  const categoriasPersonalizadas: CategoriaCard[] = useMemo(() => {
+    if (!categoriasDb.length) {
+      return [];
+    }
 
+    const iconRecord = Icons as Record<string, ElementType>;
+
+    return categoriasDb.map((categoria) => {
+      const IconComponent = iconRecord[categoria.icone] ?? Icons.BookOpen;
+
+      const cursosRelacionados = cursos.filter((curso) => {
+        const nomeCategoria =
+          typeof curso.categoria === "string"
+            ? curso.categoria
+            : curso.categoria?.nome;
+
+        return nomeCategoria === categoria.nome;
+      }).length;
+
+      const totalCursos =
+        cursosRelacionados > 0 ? cursosRelacionados : categoria.totalCursos;
+
+      return {
+        nome: categoria.nome,
+        icon: IconComponent,
+        cor: categoria.cor || "#3B82F6",
+        descricao: `Explore cursos de ${categoria.nome}`,
+        cursos: totalCursos,
+      };
+    });
+  }, [categoriasDb, cursos]);
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
@@ -226,8 +295,8 @@ export default function DashboardPage() {
           <Categories
             categorias={categoriasPersonalizadas}
             categoriaSelecionada={categoriaPersonalizadaSelecionada}
-            onCategoriaSelect={setCategoriaPersonalizadaSelecionada}
-            loading={cursosLoading}
+            onCategoriaSelect={handleCategoriaCardSelect}
+            loading={categoriasDbLoading || cursosLoading}
             isAdmin={user?.role === "admin"}
           />
 
@@ -236,10 +305,10 @@ export default function DashboardPage() {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            onCategoryChange={handleCategoryFilterChange}
             selectedNivel={selectedNivel}
             onNivelChange={setSelectedNivel}
-            categorias={categorias}
+            categorias={categoriasDisponiveis}
             niveis={niveis}
           />
 
@@ -268,11 +337,8 @@ export default function DashboardPage() {
         onClose={() => setIsModalOpen(false)}
       />
 
-      {/* Modal de Configurações Admin
-      <AdminConfigModal
-        isOpen={isAdminConfigOpen}
-        onClose={() => setIsAdminConfigOpen(false)}
-      /> */}
     </div>
   );
 }
+
+

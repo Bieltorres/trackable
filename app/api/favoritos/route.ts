@@ -1,38 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET!; // sem fallback em prod
 
-async function getUserFromToken(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
-  
+export function getUserIdFromRequest(request: NextRequest) {
+  const token = request.cookies.get("token")?.value;
   if (!token) {
-    throw new Error('Token não encontrado');
+    const err: any = new Error("Token não encontrado");
+    err.status = 401;
+    throw err;
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    return decoded.id;
-  } catch (error) {
-    throw new Error('Token inválido');
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      sub?: string;
+      id?: string;
+      email?: string;
+    };
+    const userId = decoded.sub || decoded.id; // << chave aqui
+    if (!userId) {
+      const err: any = new Error("Token inválido (sem id/sub)");
+      err.status = 401;
+      throw err;
+    }
+    return userId;
+  } catch {
+    const err: any = new Error("Token inválido/expirado");
+    err.status = 401;
+    throw err;
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserFromToken(request);
+    const userId = getUserIdFromRequest(request);
 
+    // GET: listar favoritos com dados do curso
     const favoritos = await prisma.favorito.findMany({
       where: { usuarioId: userId },
       include: {
         curso: {
           include: {
             categoria: true,
-            instrutor: {
-              select: {
-                id: true,
-                name: true,
+            // << ajuste aqui: navegar pela pivô
+            instrutores: {
+              include: {
+                instrutor: { select: { id: true, nome: true } },
               },
             },
             _count: {
@@ -44,73 +58,78 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { data: "desc" }, // seu campo no Favorito
     });
 
     return NextResponse.json({ data: favoritos });
-  } catch (error) {
-    console.error('Erro ao buscar favoritos:', error);
+  } catch (err: any) {
+    const status = err?.status ?? 500;
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
+      { error: err?.message ?? "Erro interno do servidor" },
+      { status }
     );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserFromToken(request);
+    const userId = getUserIdFromRequest(request);
     const { cursoId } = await request.json();
-
     if (!cursoId) {
       return NextResponse.json(
-        { error: 'ID do curso é obrigatório' },
+        { error: "ID do curso é obrigatório" },
         { status: 400 }
       );
     }
 
-    // Verificar se já existe
-    const favoritoExistente = await prisma.favorito.findFirst({
-      where: {
-        usuarioId: userId,
-        cursoId: cursoId,
+    const whereComposite = {
+      usuarioId_cursoId: { usuarioId: userId, cursoId },
+    };
+
+    const existente = await prisma.favorito.findUnique({
+      where: whereComposite,
+      include: {
+        curso: {
+          include: {
+            categoria: true,
+            instrutores: {
+              include: { instrutor: { select: { id: true, nome: true } } },
+            },
+            _count: { select: { usuarioCursos: true, avaliacoes: true } },
+          },
+        },
       },
     });
 
-    if (favoritoExistente) {
-      // Remover favorito
-      await prisma.favorito.delete({
-        where: { id: favoritoExistente.id },
-      });
-
-      return NextResponse.json({
-        message: 'Favorito removido',
-        action: 'removed',
-        favorito: favoritoExistente,
-      });
-    } else {
-      // Adicionar favorito
-      const novoFavorito = await prisma.favorito.create({
-        data: {
-          usuarioId: userId,
-          cursoId: cursoId,
-        },
-        include: {
-          curso: true,
-        },
-      });
-
-      return NextResponse.json({
-        message: 'Favorito adicionado',
-        action: 'added',
-        favorito: novoFavorito,
-      });
+    if (existente) {
+      await prisma.favorito.delete({ where: whereComposite });
+      return NextResponse.json({ action: "removed", favorito: existente });
     }
-  } catch (error) {
-    console.error('Erro ao alterar favorito:', error);
+
+    const novo = await prisma.favorito.create({
+      data: {
+        usuario: { connect: { id: userId } },
+        curso: { connect: { id: cursoId } },
+      },
+      include: {
+        curso: {
+          include: {
+            categoria: true,
+            instrutores: {
+              include: { instrutor: { select: { id: true, nome: true } } },
+            },
+            _count: { select: { usuarioCursos: true, avaliacoes: true } },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({ action: "added", favorito: novo });
+  } catch (err: any) {
+    const status = err?.status ?? 500;
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
+      { error: err?.message ?? "Erro interno do servidor" },
+      { status }
     );
   }
 }
