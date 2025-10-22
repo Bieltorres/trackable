@@ -1,7 +1,7 @@
 // app/reset-password/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -88,43 +88,47 @@ export default function ResetPasswordPage() {
   };
 
   return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Redefinir Senha</CardTitle>
-          <CardDescription>Digite a nova senha.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="password">Nova senha</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="confirm">Confirmar senha</Label>
-              <Input
-                id="confirm"
-                type="password"
-                required
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
-            </div>
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>Redefinir Senha</CardTitle>
+        <CardDescription>Digite a nova senha.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="password">Nova senha</Label>
+            <Input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="confirm">Confirmar senha</Label>
+            <Input
+              id="confirm"
+              type="password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || !token}
-            >
-              {loading ? "Atualizando..." : "Redefinir senha"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <Button type="submit" className="w-full" disabled={loading || !token}>
+            {loading ? "Atualizando..." : "Redefinir senha"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="text-center p-8">Carregando...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
