@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 interface CursoFormData {
+  nomeInterno: string;
   titulo: string;
   descricao: string;
   instrutoresIds: string[];
@@ -15,6 +16,7 @@ interface CursoFormData {
 export function useCursoForm(onSuccess?: (curso: any) => void) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<CursoFormData>({
+    nomeInterno: "",
     titulo: "",
     descricao: "",
     instrutoresIds: [],
@@ -28,13 +30,14 @@ export function useCursoForm(onSuccess?: (curso: any) => void) {
     console.log("🚀 useCursoForm.handleSubmit chamado");
 
     if (
+      !formData.nomeInterno ||
       !formData.titulo ||
       !formData.descricao ||
       !formData.categoriaId ||
       formData.instrutoresIds.length === 0
     ) {
       toast.error(
-        "Título, descrição, categoria e pelo menos um instrutor são obrigatórios"
+        "Nome interno, título, descrição, categoria e pelo menos um instrutor são obrigatórios"
       );
       return;
     }
@@ -56,6 +59,7 @@ export function useCursoForm(onSuccess?: (curso: any) => void) {
         console.log("✅ Curso criado:", data.curso);
 
         setFormData({
+          nomeInterno: "",
           titulo: "",
           descricao: "",
           instrutoresIds: [],

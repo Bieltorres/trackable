@@ -1,4 +1,4 @@
-// components/admin/course-management/cursos/CursoDialog.tsx
+﻿// components/admin/course-management/cursos/CursoDialog.tsx
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -65,6 +65,7 @@ export function CursoDialog({
         : [];
 
       cursoForm.setFormData({
+        nomeInterno: editingCurso.nomeInterno || "",
         titulo: editingCurso.titulo || "",
         descricao: editingCurso.descricao || "",
         instrutoresIds,
@@ -76,6 +77,7 @@ export function CursoDialog({
     } else {
       // Resetar formulário ao criar novo
       cursoForm.setFormData({
+        nomeInterno: "",
         titulo: "",
         descricao: "",
         instrutoresIds: [],
@@ -103,6 +105,7 @@ export function CursoDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          nomeInterno: cursoForm.formData.nomeInterno,
           titulo: cursoForm.formData.titulo,
           descricao: cursoForm.formData.descricao,
           categoriaId: cursoForm.formData.categoriaId,
@@ -141,6 +144,19 @@ export function CursoDialog({
           </DialogHeader>
 
           <div className="w-full space-y-6">
+            <div>
+              <Label>Nome interno</Label>
+              <Input
+                placeholder="Identificação interna do curso"
+                value={cursoForm.formData.nomeInterno}
+                onChange={(e) =>
+                  cursoForm.setFormData({
+                    ...cursoForm.formData,
+                    nomeInterno: e.target.value,
+                  })
+                }
+              />
+            </div>
             <div>
               <Label>Título do Curso</Label>
               <Input
@@ -321,7 +337,11 @@ export function CursoDialog({
                       }}
                       className="h-4 w-4"
                     />
-                    <span className="text-sm">{modulo.titulo}</span>
+                    <span className="text-sm">
+                      {modulo.nomeInterno
+                        ? `${modulo.nomeInterno} — ${modulo.titulo}`
+                        : modulo.titulo}
+                    </span>
                   </label>
                 ))}
               </div>

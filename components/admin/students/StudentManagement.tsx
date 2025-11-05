@@ -47,7 +47,7 @@ type AlunoResumo = {
   totalConcluidos: number;
   progressoMedio: number;
   info: {
-    bio: string | null;
+    genero: string | null;
     avatar: string | null;
     cidade: string | null;
     estado: string | null;

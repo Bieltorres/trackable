@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -31,7 +30,7 @@ const userData = {
     estado: "SP",
     pais: "Brasil",
   },
-  bio: "Empreendedor digital apaixonado por marketing e vendas. Sempre em busca de conhecimento para crescer profissionalmente.",
+  genero: "masculino",
 }
 
 // Dados simulados de métodos de pagamento
@@ -239,14 +238,21 @@ export function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Biografia</Label>
-                  <Textarea
-                    id="bio"
-                    value={dadosGerais.bio}
-                    onChange={(e) => setDadosGerais({ ...dadosGerais, bio: e.target.value })}
-                    rows={3}
-                    placeholder="Conte um pouco sobre você..."
-                  />
+                  <Label htmlFor="genero">Gênero</Label>
+                  <Select
+                    value={dadosGerais.genero || undefined}
+                    onValueChange={(value) => setDadosGerais({ ...dadosGerais, genero: value })}
+                  >
+                    <SelectTrigger id="genero">
+                      <SelectValue placeholder="Selecione seu gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                      <SelectItem value="nao-informar">Prefiro não informar</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>

@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     let updatedUserInfo = null;
     if (userInfo) {
       const userInfoData = {
-        bio: userInfo.bio || null,
+        genero: userInfo.genero || null,
         cep: userInfo.cep || null,
         rua: userInfo.rua || null,
         cidade: userInfo.cidade || null,

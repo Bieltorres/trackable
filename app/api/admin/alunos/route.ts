@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
         progressoMedio,
         info: aluno.userInfo
           ? {
-              bio: aluno.userInfo.bio,
+              genero: aluno.userInfo.genero,
               avatar: aluno.userInfo.avatar,
               cidade: aluno.userInfo.cidade,
               estado: aluno.userInfo.estado,

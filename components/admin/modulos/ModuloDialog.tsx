@@ -15,6 +15,7 @@ import { Settings, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface ModuloFormData {
+  nomeInterno: string;
   titulo: string;
   descricao: string;
   ordem: string;
@@ -22,11 +23,17 @@ interface ModuloFormData {
   cursosSelecionados: string[];
 }
 
+interface ModuloResumo {
+  id: string;
+  titulo: string;
+  nomeInterno?: string | null;
+}
+
 interface ModuloDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cursos: Array<{ id: string; titulo: string }>;
-  aulas: Array<{ id: string; titulo: string }>;
+  cursos: ModuloResumo[];
+  aulas: ModuloResumo[];
   onModuloCreated: (modulo: any) => void;
   editingModulo?: any;
   editingId?: string | null;
@@ -43,6 +50,7 @@ export function ModuloDialog({
 }: ModuloDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ModuloFormData>({
+    nomeInterno: "",
     titulo: "",
     descricao: "",
     ordem: "",
@@ -53,19 +61,16 @@ export function ModuloDialog({
   // Preencher formulário quando estiver editando
   useEffect(() => {
     if (editingModulo && editingId) {
-      console.log("Preenchendo formulário com dados do módulo:", editingModulo);
-
-      // Extrair IDs dos cursos
       const cursosSelecionados = editingModulo.cursoModulos
         ? editingModulo.cursoModulos.map((cm: any) => cm.cursoId)
         : [];
 
-      // Extrair IDs das aulas
       const aulasSelecionadas = editingModulo.moduloAulas
         ? editingModulo.moduloAulas.map((ma: any) => ma.aulaId)
         : [];
 
       setFormData({
+        nomeInterno: editingModulo.nomeInterno || "",
         titulo: editingModulo.titulo || "",
         descricao: editingModulo.descricao || "",
         ordem: editingModulo.ordem?.toString() || "",
@@ -73,8 +78,8 @@ export function ModuloDialog({
         cursosSelecionados,
       });
     } else {
-      // Resetar formulário ao criar novo
       setFormData({
+        nomeInterno: "",
         titulo: "",
         descricao: "",
         ordem: "",
@@ -85,10 +90,19 @@ export function ModuloDialog({
   }, [editingModulo, editingId, open]);
 
   const handleSubmit = async () => {
-    console.log("ModuloDialog handleSubmit, editingId:", editingId);
+    if (!formData.nomeInterno || !formData.titulo || !formData.ordem) {
+      toast.error("Informe nome interno, título e ordem do módulo");
+      return;
+    }
 
-    if (!formData.titulo || !formData.ordem) {
-      toast.error("Preencha todos os campos obrigatórios");
+    const ordemNumero = Number(formData.ordem);
+    if (Number.isNaN(ordemNumero)) {
+      toast.error("A ordem precisa ser um número válido");
+      return;
+    }
+
+    if (!formData.cursosSelecionados.length) {
+      toast.error("Selecione pelo menos um curso para vincular");
       return;
     }
 
@@ -98,7 +112,6 @@ export function ModuloDialog({
       const url = editingId
         ? `/api/admin/modulos/${editingId}`
         : "/api/admin/modulos";
-
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -107,15 +120,14 @@ export function ModuloDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          nomeInterno: formData.nomeInterno,
           titulo: formData.titulo,
           descricao: formData.descricao,
-          ordem: parseInt(formData.ordem),
+          ordem: ordemNumero,
           aulasSelecionadas: formData.aulasSelecionadas,
           cursosSelecionados: formData.cursosSelecionados,
         }),
       });
-
-      console.log("Response status:", response.status);
 
       if (!response.ok) {
         throw new Error(
@@ -124,7 +136,6 @@ export function ModuloDialog({
       }
 
       const moduloSalvo = await response.json();
-      console.log("Módulo salvo:", moduloSalvo);
 
       toast.success(
         editingId
@@ -143,6 +154,9 @@ export function ModuloDialog({
     }
   };
 
+  const renderNomeComTitulo = (item: ModuloResumo) =>
+    item.nomeInterno ? `${item.nomeInterno} - ${item.titulo}` : item.titulo;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[90vh] flex flex-col overflow-y-auto">
@@ -154,22 +168,34 @@ export function ModuloDialog({
         </DialogHeader>
 
         <div className="w-full space-y-6">
-          <div>
-            <Label>Título do Módulo</Label>
-            <Input
-              placeholder="Título do Módulo"
-              value={formData.titulo}
-              onChange={(e) =>
-                setFormData({ ...formData, titulo: e.target.value })
-              }
-            />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Label>Nome interno</Label>
+              <Input
+                placeholder="Identificação interna do módulo"
+                value={formData.nomeInterno}
+                onChange={(e) =>
+                  setFormData({ ...formData, nomeInterno: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <Label>Título do Módulo</Label>
+              <Input
+                placeholder="Título do módulo"
+                value={formData.titulo}
+                onChange={(e) =>
+                  setFormData({ ...formData, titulo: e.target.value })
+                }
+              />
+            </div>
           </div>
 
           <div>
             <Label>Ordem do Módulo</Label>
             <Input
               type="number"
-              placeholder="Ordem do Módulo"
+              placeholder="Ordem do módulo"
               value={formData.ordem}
               onChange={(e) =>
                 setFormData({ ...formData, ordem: e.target.value })
@@ -180,7 +206,7 @@ export function ModuloDialog({
           <div>
             <Label>Descrição do Módulo</Label>
             <Textarea
-              placeholder="Descrição do Módulo"
+              placeholder="Descrição do módulo"
               value={formData.descricao}
               onChange={(e) =>
                 setFormData({ ...formData, descricao: e.target.value })
@@ -224,7 +250,9 @@ export function ModuloDialog({
                       }}
                       className="h-4 w-4"
                     />
-                    <span className="text-sm">{curso.titulo}</span>
+                    <span className="text-sm">
+                      {renderNomeComTitulo(curso)}
+                    </span>
                   </label>
                 ))
               )}
@@ -267,7 +295,7 @@ export function ModuloDialog({
                       }}
                       className="h-4 w-4"
                     />
-                    <span className="text-sm">{aula.titulo}</span>
+                    <span className="text-sm">{renderNomeComTitulo(aula)}</span>
                   </label>
                 ))
               )}

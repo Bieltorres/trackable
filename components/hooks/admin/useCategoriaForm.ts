@@ -4,12 +4,36 @@ import { useToast } from "@/components/ui/use-toast";
 
 export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
   const { toast } = useToast();
+  const ICON_OPTIONS = [
+    "BookOpen",
+    "GraduationCap",
+    "Code",
+    "BarChart3",
+    "Lightbulb",
+    "Shapes",
+    "Puzzle",
+    "Globe",
+    "Cpu",
+    "Palette",
+    "Sparkles",
+    "Layers",
+  ];
+  const getRandomIcon = () =>
+    ICON_OPTIONS[Math.floor(Math.random() * ICON_OPTIONS.length)];
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     cor: "#3B82F6",
-    icone: "BookOpen",
+    icone: getRandomIcon(),
   });
+
+  const randomizeIcon = () => {
+    setFormData((prev) => ({
+      ...prev,
+      icone: getRandomIcon(),
+    }));
+  };
 
   const handleSubmit = async () => {
     if (!formData.nome) {
@@ -35,7 +59,7 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
         setFormData({
           nome: "",
           cor: "#3B82F6",
-          icone: "BookOpen",
+          icone: getRandomIcon(),
         });
         toast({
           title: "Sucesso",
@@ -67,5 +91,6 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
     setFormData,
     isLoading,
     handleSubmit,
+    randomizeIcon,
   };
 }

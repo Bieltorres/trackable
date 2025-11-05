@@ -5,7 +5,7 @@ import prisma from "@/prisma/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, birthdate, phone } = await req.json();
+    const { name, email, password, birthdate, phone, genero } = await req.json();
 
     // validação básica
     if (!name || !email || !password) {
@@ -26,7 +26,14 @@ export async function POST(req: Request) {
         email, 
         password: hashedPassword, 
         birthdate: birthdate ? new Date(birthdate) : null, 
-        phone 
+        phone,
+        userInfo: genero
+          ? {
+              create: {
+                genero,
+              },
+            }
+          : undefined,
       },
       select: { id: true, name: true, email: true, birthdate: true, phone: true },
     });

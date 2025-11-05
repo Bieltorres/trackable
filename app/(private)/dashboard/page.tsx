@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { ElementType } from "react";
 import * as Icons from "lucide-react";
 import { CourseModal } from "@/components/course-modal";
@@ -165,6 +165,33 @@ export default function DashboardPage() {
     setSelectedCategory(value);
     setCategoriaPersonalizadaSelecionada(value === "Todos" ? null : value);
   };
+
+  const handleCategoriaCreated = useCallback(
+    (categoria: {
+      id: string;
+      nome: string;
+      cor: string;
+      icone: string;
+      totalCursos?: number;
+    }) => {
+      setCategoriasDb((prev) => {
+        const novaCategoria: CategoriaApi = {
+          id: categoria.id,
+          nome: categoria.nome,
+          cor: categoria.cor,
+          icone: categoria.icone,
+          totalCursos: categoria.totalCursos ?? 0,
+        };
+
+        const filtradas = prev.filter(
+          (cat) => cat.id !== novaCategoria.id && cat.nome !== novaCategoria.nome
+        );
+
+        return [novaCategoria, ...filtradas];
+      });
+    },
+    []
+  );
   const cursosComProgresso = cursos.map((curso) => {
     const meuCurso = meusCursos.find((mc) => mc.cursoId === curso.id);
 
@@ -298,6 +325,7 @@ export default function DashboardPage() {
             onCategoriaSelect={handleCategoriaCardSelect}
             loading={categoriasDbLoading || cursosLoading}
             isAdmin={user?.role === "admin"}
+            onCategoriaCreated={handleCategoriaCreated}
           />
 
           {/* Filtros e Busca */}

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -83,7 +82,7 @@ export default function PerfilPage() {
       estado: "",
       pais: "Brasil",
     },
-    bio: "",
+    genero: "",
   });
   const [userInfo, setUserInfo] = useState<any>(null);
   const [senhas, setSenhas] = useState({
@@ -125,7 +124,7 @@ export default function PerfilPage() {
         if (data.userInfo) {
           setDadosGerais((prev) => ({
             ...prev,
-            bio: data.userInfo.bio || "",
+            genero: data.userInfo.genero || "",
             endereco: {
               cep: data.userInfo.cep || "",
               rua: data.userInfo.rua || "",
@@ -177,7 +176,7 @@ export default function PerfilPage() {
             ? new Date(dadosGerais.dataNascimento).toISOString()
             : null,
           userInfo: {
-            bio: dadosGerais.bio,
+            genero: dadosGerais.genero,
             cep: dadosGerais.endereco.cep,
             rua: dadosGerais.endereco.rua,
             cidade: dadosGerais.endereco.cidade,
@@ -415,18 +414,23 @@ export default function PerfilPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bio">Biografia</Label>
-                <Textarea
-                  id="bio"
-                  value={dadosGerais.bio}
-                  onChange={(e) =>
-                    setDadosGerais({ ...dadosGerais, bio: e.target.value })
-                  }
-                  rows={3}
-                  placeholder="Conte um pouco sobre você..."
-                />
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="genero">Gênero</Label>
+            <Select
+              value={dadosGerais.genero || undefined}
+              onValueChange={(value) =>
+                setDadosGerais({ ...dadosGerais, genero: value })
+              }
+            >
+              <SelectTrigger id="genero">
+                <SelectValue placeholder="Selecione seu gênero" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="feminino">Feminino</SelectItem>
+                <SelectItem value="masculino">Masculino</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
             </CardContent>
           </Card>
 

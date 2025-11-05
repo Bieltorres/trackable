@@ -53,6 +53,7 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
     const {
+      nomeInterno,
       titulo,
       descricao,
       thumbnail,
@@ -70,22 +71,28 @@ export async function PUT(
     } = body;
 
     // Atualizar o curso
+    const updateData: any = {
+      titulo,
+      descricao,
+      thumbnail,
+      categoriaId,
+      nivel,
+      preco: preco ? parseFloat(preco) : null,
+      precoOriginal: precoOriginal ? parseFloat(precoOriginal) : null,
+      desconto: desconto ? parseInt(desconto) : null,
+      status,
+      bestseller: bestseller === true || bestseller === "true",
+      novo: novo === true || novo === "true",
+      duracaoTotal,
+    };
+
+    if (nomeInterno !== undefined) {
+      updateData.nomeInterno = nomeInterno;
+    }
+
     const cursoAtualizado = await prisma.curso.update({
       where: { id },
-      data: {
-        titulo,
-        descricao,
-        thumbnail,
-        categoriaId,
-        nivel,
-        preco: preco ? parseFloat(preco) : null,
-        precoOriginal: precoOriginal ? parseFloat(precoOriginal) : null,
-        desconto: desconto ? parseInt(desconto) : null,
-        status,
-        bestseller: bestseller === true || bestseller === "true",
-        novo: novo === true || novo === "true",
-        duracaoTotal,
-      },
+      data: updateData,
     });
 
     // Atualizar relações com instrutores se fornecido

@@ -12,6 +12,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ChevronDown,
   ChevronRight,
   Clock,
@@ -69,7 +77,7 @@ export default function AulaPage() {
 
   // Estados existentes
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [modulosAbertos, setModulosAbertos] = useState<string[]>([]); // Mudado para string (IDs são UUIDs)
+  const [modulosAbertos, setModulosAbertos] = useState<string[]>([]);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [editandoConteudo, setEditandoConteudo] = useState(false);
   const [tituloAula, setTituloAula] = useState("");
@@ -88,6 +96,8 @@ export default function AulaPage() {
     titulo: "",
     conteudo: "",
   });
+  const [anotacoesVisiveis, setAnotacoesVisiveis] = useState(true);
+  const [isAnotacaoDialogOpen, setIsAnotacaoDialogOpen] = useState(false);
 
   const carregarAnotacoes = useCallback(async () => {
     if (!cursoId) {
@@ -105,16 +115,16 @@ export default function AulaPage() {
       const response = await fetch(`/api/anotacoes?${searchParams.toString()}`);
 
       if (!response.ok) {
-        throw new Error("Erro ao carregar anotacoes");
+        throw new Error("Erro ao carregar anotações");
       }
 
       const data = await response.json();
       setAnotacoes(Array.isArray(data?.data) ? data.data : []);
     } catch (error) {
-      console.error("Erro ao carregar anotacoes:", error);
+      console.error("Erro ao carregar anotações:", error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar anotacoes",
+        description: "Erro ao carregar anotações",
         variant: "destructive",
       });
     } finally {
@@ -137,7 +147,7 @@ export default function AulaPage() {
         }
 
         const data = await response.json();
-        console.log("Dados recebidos:", data); // Debug
+        console.log("Dados recebidos:", data);
 
         setCursoData(data.curso);
         setAulaAtual(data.aula);
@@ -198,7 +208,7 @@ export default function AulaPage() {
     if (!cursoId) {
       toast({
         title: "Erro",
-        description: "Curso nao encontrado",
+        description: "Curso não encontrado",
         variant: "destructive",
       });
       return;
@@ -209,8 +219,8 @@ export default function AulaPage() {
       !novaAnotacao.conteudo.trim().length
     ) {
       toast({
-        title: "Atencao",
-        description: "Preencha titulo e conteudo da anotacao",
+        title: "Atenção",
+        description: "Preencha título e conteúdo da anotação",
         variant: "destructive",
       });
       return;
@@ -232,7 +242,7 @@ export default function AulaPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar anotacao");
+        throw new Error("Erro ao salvar anotação");
       }
 
       const data = await response.json();
@@ -243,15 +253,17 @@ export default function AulaPage() {
       }
 
       setNovaAnotacao({ titulo: "", conteudo: "" });
+      setIsAnotacaoDialogOpen(false);
+      setAnotacoesVisiveis(true);
       toast({
         title: "Sucesso",
-        description: "Anotacao salva com sucesso",
+        description: "Anotação salva com sucesso",
       });
     } catch (error) {
-      console.error("Erro ao salvar anotacao:", error);
+      console.error("Erro ao salvar anotação:", error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar anotacao",
+        description: "Erro ao salvar anotação",
         variant: "destructive",
       });
     } finally {
@@ -262,7 +274,6 @@ export default function AulaPage() {
   const handleAdicionarArquivo = async () => {
     if (novoArquivo.nome) {
       try {
-        // TODO: Implementar API para adicionar arquivo
         console.log("Adicionando arquivo:", novoArquivo);
         setNovoArquivo({ nome: "", tipo: "", tamanho: "" });
         toast({
@@ -328,7 +339,6 @@ export default function AulaPage() {
     }
 
     const { url } = await res.json();
-    // Abre a URL pré-assinada (válida por 60s)
     window.location.href = url;
   }
 
@@ -379,8 +389,8 @@ export default function AulaPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Main Content Area */}
         <main className="flex-1 flex overflow-hidden">
-          {/* Video e Conteúdo Principal */}
-          <div className="bg-white  flex-1 flex flex-col overflow-y-auto">
+          {/* Vídeo e Conteúdo Principal */}
+          <div className="bg-white flex-1 flex flex-col overflow-y-auto">
             {/* Video Player */}
             <div
               style={{
@@ -449,20 +459,34 @@ export default function AulaPage() {
                   </div>
                 ) : (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                       <h1 className="text-2xl font-bold text-gray-900">
                         {tituloAula}
                       </h1>
-                      {isAdminMode && (
+                      <div className="flex items-center gap-2">
                         <Button
-                          variant="outline"
+                          variant={anotacoesVisiveis ? "default" : "outline"}
                           size="sm"
-                          onClick={() => setEditandoConteudo(true)}
+          onClick={() => {
+            setAnotacoesVisiveis(true);
+            setIsAnotacaoDialogOpen(true);
+          }}
+          aria-expanded={anotacoesVisiveis}
                         >
-                          <Edit3 className="h-4 w-4 mr-2" />
-                          Editar
+                          <NotebookPen className="h-4 w-4 mr-2" />
+                          Anotações
                         </Button>
-                      )}
+                        {isAdminMode && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditandoConteudo(true)}
+                          >
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Editar
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-gray-600 leading-relaxed">
                       {descricaoAula}
@@ -567,113 +591,86 @@ export default function AulaPage() {
                 </CardContent>
               </Card>
 
-              {/* Anotacoes da Aula */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center">
-                      <NotebookPen className="h-5 w-5 mr-2" />
-                      Minhas anotacoes
-                    </CardTitle>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Guarde os principais pontos desta aula.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Titulo da anotacao"
-                      value={novaAnotacao.titulo}
-                      onChange={(e) =>
-                        setNovaAnotacao((prev) => ({
-                          ...prev,
-                          titulo: e.target.value,
-                        }))
-                      }
-                    />
-                    <Textarea
-                      placeholder="Escreva os destaques desta aula"
-                      value={novaAnotacao.conteudo}
-                      onChange={(e) =>
-                        setNovaAnotacao((prev) => ({
-                          ...prev,
-                          conteudo: e.target.value,
-                        }))
-                      }
-                      rows={4}
-                    />
-                    <div className="flex justify-end">
-                      <Button
-                        size="sm"
-                        onClick={handleSalvarAnotacao}
-                        disabled={salvandoAnotacao}
-                      >
-                        {salvandoAnotacao ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Salvando...
-                          </div>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4 mr-2" />
-                            Salvar anotacao
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {carregandoAnotacoes ? (
-                      <div className="flex justify-center py-6">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+              {/* Anotações da Aula */}
+              <Collapsible
+                open={anotacoesVisiveis}
+                onOpenChange={setAnotacoesVisiveis}
+              >
+                <CollapsibleContent className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center">
+                          <NotebookPen className="h-5 w-5 mr-2" />
+                          Minhas anotações
+                        </CardTitle>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setNovaAnotacao({ titulo: "", conteudo: "" });
+                            setIsAnotacaoDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Nova anotação
+                        </Button>
                       </div>
-                    ) : anotacoes.length > 0 ? (
-                      anotacoes.map((anotacao) => {
-                        const dataReferencia =
-                          anotacao.dataCriacao ||
-                          anotacao.createdAt ||
-                          anotacao.updatedAt;
+                      <p className="text-sm text-gray-500">
+                        Guarde os principais pontos desta aula.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {carregandoAnotacoes ? (
+                        <div className="flex justify-center py-6">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400"></div>
+                        </div>
+                      ) : anotacoes.length > 0 ? (
+                        anotacoes.map((anotacao) => {
+                          const dataReferencia =
+                            anotacao.dataCriacao ||
+                            anotacao.createdAt ||
+                            anotacao.updatedAt;
 
-                        return (
-                          <div
-                            key={anotacao.id}
-                            className="border rounded-md p-3 bg-gray-50"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <h4 className="font-semibold text-gray-900">
-                                  {anotacao.titulo}
-                                </h4>
-                                {dataReferencia && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {formatarDataAnotacao(
-                                      dataReferencia as string
-                                    )}
-                                  </p>
+                          return (
+                            <div
+                              key={anotacao.id}
+                              className="border rounded-md p-3 bg-gray-50"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">
+                                    {anotacao.titulo}
+                                  </h4>
+                                  {dataReferencia && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {formatarDataAnotacao(
+                                        dataReferencia as string
+                                      )}
+                                    </p>
+                                  )}
+                                </div>
+                                {anotacao.aula?.titulo && (
+                                  <span className="text-xs text-gray-500">
+                                    {anotacao.aula.titulo}
+                                  </span>
                                 )}
                               </div>
-                              {anotacao.aula?.titulo && (
-                                <span className="text-xs text-gray-500">
-                                  {anotacao.aula.titulo}
-                                </span>
-                              )}
+                              <p className="text-sm text-gray-700 whitespace-pre-line mt-3">
+                                {anotacao.conteudo}
+                              </p>
                             </div>
-                            <p className="text-sm text-gray-700 whitespace-pre-line mt-3">
-                              {anotacao.conteudo}
-                            </p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-500 text-center py-4">
-                        Nenhuma anotacao registrada para esta aula.
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                          );
+                        })
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-4">
+                          Nenhuma anotação registrada para esta aula.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </div>
 
@@ -761,6 +758,79 @@ export default function AulaPage() {
           </div>
         </main>
       </div>
+
+      {/* Dialog de nova anotação */}
+      <Dialog
+        open={isAnotacaoDialogOpen}
+        onOpenChange={(open) => {
+          setIsAnotacaoDialogOpen(open);
+          if (!open) {
+            setSalvandoAnotacao(false);
+            setNovaAnotacao({ titulo: "", conteudo: "" });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-90 data-[state=open]:slide-in-from-top-8">
+          <DialogHeader>
+            <DialogTitle>Nova anotação</DialogTitle>
+            <DialogDescription>
+              Registre seus principais aprendizados desta aula.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Título da anotação"
+              value={novaAnotacao.titulo}
+              onChange={(e) =>
+                setNovaAnotacao((prev) => ({
+                  ...prev,
+                  titulo: e.target.value,
+                }))
+              }
+            />
+            <Textarea
+              placeholder="Escreva os destaques desta aula"
+              value={novaAnotacao.conteudo}
+              onChange={(e) =>
+                setNovaAnotacao((prev) => ({
+                  ...prev,
+                  conteudo: e.target.value,
+                }))
+              }
+              rows={5}
+            />
+          </div>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setIsAnotacaoDialogOpen(false);
+                setNovaAnotacao({ titulo: "", conteudo: "" });
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSalvarAnotacao}
+              disabled={salvandoAnotacao}
+            >
+              {salvandoAnotacao ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Salvando...
+                </div>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar anotação
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Configurações */}
       <UserSettingsModal

@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       cursos: cursos.map((curso) => ({
         id: curso.id,
+        nomeInterno: curso.nomeInterno,
         titulo: curso.titulo,
         descricao: curso.descricao,
         categoria: curso.categoria?.nome,
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
         dataLancamento: curso.createdAt,
         modulos: curso.cursoModulos.map((cm) => ({
           id: cm.modulo.id,
+          nomeInterno: cm.modulo.nomeInterno,
           titulo: cm.modulo.titulo,
         })),
         totalModulos: curso.cursoModulos.length,
@@ -110,6 +112,7 @@ export async function POST(req: NextRequest) {
     }
 
     type CursoRequest = {
+      nomeInterno: string;
       titulo: string;
       descricao: string;
       categoriaId: string;
@@ -122,6 +125,7 @@ export async function POST(req: NextRequest) {
     };
 
     const {
+      nomeInterno,
       titulo,
       descricao,
       categoriaId,
@@ -134,6 +138,7 @@ export async function POST(req: NextRequest) {
     }: CursoRequest = await req.json();
 
     if (
+      !nomeInterno ||
       !titulo ||
       !descricao ||
       !categoriaId ||
@@ -143,7 +148,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Título, descrição, categoria, nível e pelo menos 1 instrutor são obrigatórios",
+            "Nome interno, título, descrição, categoria, nível e pelo menos 1 instrutor são obrigatórios",
         },
         { status: 400 }
       );
@@ -151,6 +156,7 @@ export async function POST(req: NextRequest) {
 
     const novoCurso = await prisma.curso.create({
       data: {
+        nomeInterno,
         titulo,
         descricao,
         nivel,

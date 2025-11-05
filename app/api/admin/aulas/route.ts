@@ -1,50 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
-export async function GET(req: NextRequest) {
+async function ensureAdmin(req: NextRequest) {
+  const token = req.cookies.get("token")?.value;
+  if (!token) {
+    return { error: NextResponse.json({ error: "Token de autenticação não encontrado" }, { status: 401 }) };
+  }
+
   try {
-    // Verificar token de autenticação
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { error: "Token de autenticação não encontrado" },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-        sub: string;
-      };
-      userId = decoded.sub;
-    } catch (error) {
-      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
-    }
-
-    // Verificar se o usuário é admin
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { sub: string };
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: decoded.sub },
       select: { role: true },
     });
 
     if (!user || user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Acesso negado. Apenas administradores podem acessar." },
-        { status: 403 }
-      );
+      return { error: NextResponse.json({ error: "Acesso negado. Apenas administradores podem acessar." }, { status: 403 }) };
     }
 
-    // Buscar todas as aulas
-    // GET
+    return { userId: decoded.sub };
+  } catch {
+    return { error: NextResponse.json({ error: "Token inválido" }, { status: 401 }) };
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const auth = await ensureAdmin(req);
+  if ("error" in auth) {
+    return auth.error;
+  }
+
+  try {
     const aulas = await prisma.aula.findMany({
       include: {
         arquivos: true,
         aulaModulos: {
           include: {
             modulo: {
-              select: { id: true, titulo: true },
+              select: { id: true, titulo: true, nomeInterno: true },
             },
           },
         },
@@ -55,60 +49,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       aulas: aulas.map((aula) => ({
         id: aula.id,
+        nomeInterno: aula.nomeInterno,
         titulo: aula.titulo,
         descricao: aula.descricao,
         videoUrl: aula.videoUrl,
         duracao: aula.duracao,
         ordem: aula.ordem,
         arquivos: aula.arquivos,
-        modulosVinculados: aula.aulaModulos.map((am) => am.modulo.id), // 👈 corrigido
+        modulosVinculados: aula.aulaModulos.map((am) => am.modulo.id),
       })),
     });
   } catch (error) {
     console.error("Erro ao buscar aulas:", error);
-    return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await ensureAdmin(req);
+  if ("error" in auth) {
+    return auth.error;
+  }
+
   try {
-    // Verificar token de autenticação
-    const token = req.cookies.get("token")?.value;
-    if (!token) {
-      return NextResponse.json(
-        { error: "Token de autenticação não encontrado" },
-        { status: 401 }
-      );
-    }
-
-    let userId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-        sub: string;
-      };
-      userId = decoded.sub;
-    } catch (error) {
-      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
-    }
-
-    // Verificar se o usuário é admin
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
-    });
-
-    if (!user || user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Acesso negado. Apenas administradores podem acessar." },
-        { status: 403 }
-      );
-    }
-
-    const requestBody = await req.json();
+    const body = await req.json();
     const {
+      nomeInterno,
       titulo,
       descricao,
       videoUrl,
@@ -117,7 +83,7 @@ export async function POST(req: NextRequest) {
       modulosSelecionados,
       moduloIds,
       arquivos,
-    } = requestBody;
+    } = body;
 
     const modulosParaVincular = Array.isArray(modulosSelecionados)
       ? modulosSelecionados
@@ -134,22 +100,21 @@ export async function POST(req: NextRequest) {
           .filter((arquivo) => arquivo.url)
       : [];
 
-    if (!titulo || !descricao) {
+    if (!nomeInterno || !titulo || !descricao) {
       return NextResponse.json(
-        { error: "Título e descrição são obrigatórios" },
+        { error: "Nome interno, título e descrição são obrigatórios" },
         { status: 400 }
       );
     }
 
-    // Criar nova aula
     const novaAula = await prisma.aula.create({
       data: {
+        nomeInterno,
         titulo,
         descricao,
         videoUrl: videoUrl || null,
         duracao: duracao || null,
         ordem: ordem ? Number(ordem) : 1,
-
         aulaModulos: modulosParaVincular.length
           ? {
               create: modulosParaVincular.map((moduloId: string) => ({
@@ -157,7 +122,6 @@ export async function POST(req: NextRequest) {
               })),
             }
           : undefined,
-
         arquivos: arquivosParaCriar.length
           ? {
               create: arquivosParaCriar.map((arquivo) => ({
@@ -170,9 +134,8 @@ export async function POST(req: NextRequest) {
       include: {
         arquivos: true,
         aulaModulos: {
-          // 👈 corrigido
           include: {
-            modulo: { select: { id: true, titulo: true } },
+            modulo: { select: { id: true, titulo: true, nomeInterno: true } },
           },
         },
       },
@@ -182,20 +145,18 @@ export async function POST(req: NextRequest) {
       message: "Aula criada com sucesso",
       aula: {
         id: novaAula.id,
+        nomeInterno: novaAula.nomeInterno,
         titulo: novaAula.titulo,
         descricao: novaAula.descricao,
         videoUrl: novaAula.videoUrl,
         duracao: novaAula.duracao,
         ordem: novaAula.ordem,
         arquivos: novaAula.arquivos,
-        modulosVinculados: novaAula.aulaModulos.map((m) => m.modulo.id), // 👈 corrigido
+        modulosVinculados: novaAula.aulaModulos.map((m) => m.modulo.id),
       },
     });
   } catch (error) {
     console.error("Erro ao criar aula:", error);
-    return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   }
 }

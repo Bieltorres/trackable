@@ -47,7 +47,7 @@ model PasswordResetToken {
 model UserInfo {
   id           String  @id @default(uuid())
   userId       String  @unique
-  bio          String?
+  genero       String?
   avatar       String?
   redesSociais Json? // JSON para armazenar links das redes sociais
   
@@ -96,6 +96,7 @@ model CursoInstrutor {
 
 model Curso {
   id            String   @id @default(uuid())
+  nomeInterno   String?
   titulo        String
   descricao     String
   thumbnail     String?
@@ -124,8 +125,9 @@ model Curso {
 }
 
 model Modulo {
-  id      String @id @default(uuid())
-  titulo  String
+  id         String @id @default(uuid())
+  nomeInterno String?
+  titulo     String
   descricao String?
   ordem   Int
 
@@ -150,8 +152,9 @@ model CursoModulo {
 }
 
 model Aula {
-  id       String  @id @default(uuid())
-  titulo   String
+  id          String  @id @default(uuid())
+  nomeInterno String?
+  titulo      String
   videoUrl String?
   ordem    Int
   duracao  String?

@@ -1,4 +1,4 @@
-// components/admin/course-management/aulas/AulaDialog.tsx
+﻿// components/admin/course-management/aulas/AulaDialog.tsx
 import { DragEvent, useEffect, useRef, useState } from "react";
 import {
   Dialog,
@@ -21,6 +21,7 @@ interface AulaArquivo {
 }
 
 interface AulaFormData {
+  nomeInterno: string;
   titulo: string;
   descricao: string;
   videoUrl: string;
@@ -33,7 +34,7 @@ interface AulaFormData {
 interface AulaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  modulos: Array<{ id: string; titulo: string }>;
+  modulos: Array<{ id: string; titulo: string; nomeInterno?: string | null }>;
   onAulaCreated: (aula: any) => void;
   editingAula?: any;
   editingId?: string | null;
@@ -52,6 +53,7 @@ export function AulaDialog({
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [formData, setFormData] = useState<AulaFormData>({
+    nomeInterno: "",
     titulo: "",
     descricao: "",
     videoUrl: "",
@@ -72,6 +74,7 @@ export function AulaDialog({
         : [];
 
       setFormData({
+        nomeInterno: editingAula.nomeInterno || "",
         titulo: editingAula.titulo || "",
         descricao: editingAula.descricao || "",
         videoUrl: editingAula.videoUrl || "",
@@ -89,6 +92,7 @@ export function AulaDialog({
     } else {
       // Resetar formulário ao criar novo
       setFormData({
+        nomeInterno: "",
         titulo: "",
         descricao: "",
         videoUrl: "",
@@ -175,8 +179,8 @@ export function AulaDialog({
   const handleSubmit = async () => {
     console.log("AulaDialog handleSubmit, editingId:", editingId);
 
-    if (!formData.titulo || !formData.ordem) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (!formData.nomeInterno || !formData.titulo || !formData.ordem) {
+      toast.error("Informe nome interno, título e ordem da aula");
       return;
     }
 
@@ -229,6 +233,7 @@ export function AulaDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          nomeInterno: formData.nomeInterno,
           titulo: formData.titulo,
           descricao: formData.descricao,
           videoUrl: formData.videoUrl,
@@ -377,7 +382,11 @@ export function AulaDialog({
                       }}
                       className="h-4 w-4"
                     />
-                    <span className="text-sm">{modulo.titulo}</span>
+                    <span className="text-sm">
+                      {modulo.nomeInterno
+                        ? `${modulo.nomeInterno} — ${modulo.titulo}`
+                        : modulo.titulo}
+                    </span>
                   </label>
                 ))
               )}

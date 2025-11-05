@@ -13,7 +13,7 @@ export interface User {
 export interface UserInfo {
   id: string;
   userId: string;
-  bio?: string | null;
+  genero?: string | null;
   avatar?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -31,6 +31,7 @@ export interface Categoria {
 export interface Curso {
   id: string;
   titulo: string;
+  nomeInterno?: string | null;
   descricao: string;
   thumbnail?: string | null;
   nivel: "iniciante" | "intermediario" | "avancado";
@@ -53,6 +54,7 @@ export interface Curso {
 
 export interface Modulo {
   id: string;
+  nomeInterno?: string | null;
   titulo: string;
   ordem: number;
   cursoId: string;
@@ -63,6 +65,7 @@ export interface Modulo {
 
 export interface Aula {
   id: string;
+  nomeInterno?: string | null;
   titulo: string;
   descricao?: string | null;
   videoUrl?: string | null;

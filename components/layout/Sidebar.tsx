@@ -67,7 +67,7 @@ export default function Sidebar({
     <aside
       aria-label="Sidebar"
       className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col",
         open ? "translate-x-0" : "-translate-x-full"
       )}
       onClick={(e) => e.stopPropagation()}
@@ -92,7 +92,7 @@ export default function Sidebar({
       </div>
 
       {/* Conteúdo com scroll */}
-      <div className="px-4 py-6 overflow-y-auto h-[calc(100vh-4rem)]">
+      <div className="flex-1 px-4 py-6 overflow-y-auto">
         {/* Menu Principal */}
         <nav className="space-y-2" aria-label="Main menu">
           {menuItems.map((item) => {

@@ -1,13 +1,13 @@
-// app/(private)/layout.tsx
+﻿// app/(private)/layout.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { Providers } from "../providers";
 import Sidebar from "@/components/layout/Sidebar";
 import { HeaderMain } from "@/components/layout/HeaderMain";
 import { Toaster } from "@/components/ui/toaster";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   Home,
   BarChart3,
@@ -16,8 +16,11 @@ import {
   Shield,
   User,
   BookOpen,
+  Heart,
 } from "lucide-react";
 import React from "react";
+import { fetchFavoritos } from "@/store/slices/cursosSlice";
+import { fetchUserProfile } from "@/store/slices/userSlice";
 
 export default function PrivateLayout({
   children,
@@ -25,7 +28,9 @@ export default function PrivateLayout({
   children: React.ReactNode;
 }) {
   console.log("PrivateLayout render");
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.user);
+  const { favoritos } = useAppSelector((state) => state.cursos);
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [layoutError, setLayoutError] = useState(false);
@@ -61,11 +66,19 @@ export default function PrivateLayout({
     };
   }, []);
 
+  useEffect(() => {
+    if (mounted) {
+      dispatch(fetchFavoritos());
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch, mounted]);
+
   const isAdmin = mounted ? user?.role === "admin" : false;
 
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
     { icon: BookOpen, label: "Catalogo de Cursos", href: "/dashboard/cursos" },
+    { icon: Heart, label: "Favoritos", href: "/favoritos" },
     { icon: BarChart3, label: "Progresso", href: "/progresso" },
     { icon: FileText, label: "Anotações", href: "/anotacoes" },
     { icon: MessageCircle, label: "Suporte", href: "/suporte" },
@@ -75,11 +88,21 @@ export default function PrivateLayout({
       href: "/admin/config",
       isAdmin: true,
     },
-    { icon: User, label: "Configurações", href: "/perfil" },
   ];
 
   const currentMenuItem = menuItems.find((item) => item.href === pathname);
   const pageTitle = currentMenuItem?.label || "Área de Membros";
+
+  const sidebarFavoritos = useMemo(
+    () =>
+      favoritos
+        .map((fav) => ({
+          id: fav.cursoId || fav.id,
+          title: fav.curso?.titulo || "Curso favorito",
+        }))
+        .filter((fav) => fav.title && fav.title.trim().length > 0),
+    [favoritos]
+  );
 
   // Evita problemas de hidratação mostrando um loading inicial
   if (!mounted) {
@@ -106,6 +129,7 @@ export default function PrivateLayout({
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           menuItems={menuItems}
+          cursosFavoritos={sidebarFavoritos}
         />
         {sidebarOpen && (
           <div
@@ -114,7 +138,7 @@ export default function PrivateLayout({
           />
         )}
 
-        <div className="flex flex-col min-h-screen w-full">
+        <div className="flex flex-col min-h-screen w-full lg:ml-64">
           <HeaderMain
             title={pageTitle}
             isAdmin={isAdmin}

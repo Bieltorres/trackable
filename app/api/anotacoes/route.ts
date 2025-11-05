@@ -12,8 +12,15 @@ async function getUserFromToken(request: NextRequest) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    return decoded.id;
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      sub?: string;
+      id?: string;
+    };
+    const userId = decoded.sub || decoded.id;
+    if (!userId) {
+      throw new Error("Token sem identificador de usuário");
+    }
+    return userId;
   } catch {
     throw new Error("Token invalido");
   }
@@ -117,4 +124,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

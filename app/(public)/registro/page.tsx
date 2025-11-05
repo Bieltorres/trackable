@@ -517,6 +517,7 @@ export default function RegistroPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [genero, setGenero] = useState("");
   const [paisSelecionado, setPaisSelecionado] = useState("+55");
   const [searchPais, setSearchPais] = useState("");
   const { toast } = useToast();
@@ -555,6 +556,15 @@ export default function RegistroPage() {
       return;
     }
 
+    if (!genero) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Selecione uma opção de gênero para continuar",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -564,6 +574,7 @@ export default function RegistroPage() {
         password,
         birthdate,
         phone: `${paisSelecionado} ${phone}`,
+        genero,
       }),
     });
 
@@ -580,7 +591,7 @@ export default function RegistroPage() {
         title: "Conta criada com sucesso!",
         description: "Você será redirecionado para a página de login",
       });
-      
+
       // Aguarda 2 segundos antes de redirecionar
       setTimeout(() => {
         router.push("/login");
@@ -641,13 +652,27 @@ export default function RegistroPage() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="genero">Gênero</Label>
+              <Select value={genero || undefined} onValueChange={setGenero}>
+                <SelectTrigger id="genero">
+                  <SelectValue placeholder="Selecione seu gênero" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="feminino">Feminino</SelectItem>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                {/* País / DDI */}
                 <Select
                   value={paisSelecionado}
                   onValueChange={handlePaisChange}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-[90px]">
                     <SelectValue>
                       <div className="flex items-center gap-2">
                         <span>{paisAtual.bandeira}</span>
@@ -664,10 +689,13 @@ export default function RegistroPage() {
                         className="h-8"
                       />
                     </div>
-                    <div className="max-h-[200px] overflow-y-auto">
+                    <div className="overflow-y-auto">
                       {paisesFiltrados.length > 0 ? (
                         paisesFiltrados.map((pais) => (
-                          <SelectItem key={`${pais.codigo}-${pais.nome}`} value={pais.codigo}>
+                          <SelectItem
+                            key={`${pais.codigo}-${pais.nome}`}
+                            value={pais.codigo}
+                          >
                             <div className="flex items-center gap-2">
                               <span>{pais.bandeira}</span>
                               <span className="text-sm">{pais.codigo}</span>
@@ -685,13 +713,15 @@ export default function RegistroPage() {
                     </div>
                   </SelectContent>
                 </Select>
-                <div className="relative flex-1">
+
+                {/* Input do número */}
+                <div className="relative flex-1 min-w-[200px]">
                   <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
                     type="tel"
                     placeholder={paisAtual.mascara}
-                    className="pl-10"
+                    className="pl-10 w-full"
                     required
                   />
                 </div>

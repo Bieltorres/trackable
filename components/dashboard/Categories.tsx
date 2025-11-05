@@ -1,15 +1,26 @@
+import { useState } from "react";
+import type { ElementType } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CategoriaDialog } from "@/components/admin/dialogs/CategoriaDialog";
 
 interface CategoriaPersonalizada {
   nome: string;
-  icon: React.ElementType;
+  icon: ElementType;
   cor: string;
   descricao: string;
   cursos: number;
+}
+
+interface NovaCategoria {
+  id: string;
+  nome: string;
+  cor: string;
+  icone: string;
+  totalCursos?: number;
 }
 
 interface CategoriesProps {
@@ -18,6 +29,7 @@ interface CategoriesProps {
   onCategoriaSelect: (categoria: string | null) => void;
   loading?: boolean;
   isAdmin?: boolean;
+  onCategoriaCreated?: (categoria: NovaCategoria) => void;
 }
 
 export function Categories({
@@ -26,7 +38,10 @@ export function Categories({
   onCategoriaSelect,
   loading = false,
   isAdmin = false,
+  onCategoriaCreated,
 }: CategoriesProps) {
+  const [isCategoriaDialogOpen, setIsCategoriaDialogOpen] = useState(false);
+
   if (loading) {
     return (
       <div className="mb-6">
@@ -50,8 +65,12 @@ export function Categories({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Categorias</h3>
-        {isAdmin && ( 
-          <Button variant="outline" size="sm">
+        {isAdmin && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCategoriaDialogOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Categoria
           </Button>
@@ -112,6 +131,16 @@ export function Categories({
           </Card>
         ))}
       </div>
+      {isAdmin && (
+        <CategoriaDialog
+          open={isCategoriaDialogOpen}
+          onOpenChange={setIsCategoriaDialogOpen}
+          onCategoriaCreated={(categoria) => {
+            onCategoriaCreated?.(categoria);
+            setIsCategoriaDialogOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

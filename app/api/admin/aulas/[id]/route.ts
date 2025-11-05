@@ -44,19 +44,33 @@ export async function PUT(
   try {
     const { id } = params;
     const body = await request.json();
-    const { titulo, descricao, videoUrl, duracao, ordem, moduloIds, arquivos } =
-      body;
+    const {
+      nomeInterno,
+      titulo,
+      descricao,
+      videoUrl,
+      duracao,
+      ordem,
+      moduloIds,
+      arquivos,
+    } = body;
 
     // Atualizar a aula
+    const updateData: any = {
+      titulo,
+      descricao,
+      videoUrl,
+      duracao,
+      ordem: parseInt(ordem),
+    };
+
+    if (nomeInterno !== undefined) {
+      updateData.nomeInterno = nomeInterno;
+    }
+
     const aulaAtualizada = await prisma.aula.update({
       where: { id },
-      data: {
-        titulo,
-        descricao,
-        videoUrl,
-        duracao,
-        ordem: parseInt(ordem),
-      },
+      data: updateData,
     });
 
     // Atualizar relações com módulos se fornecido

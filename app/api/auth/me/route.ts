@@ -32,7 +32,7 @@ export async function GET() {
         phone: true,
         userInfo: {
           select: {
-            bio: true,
+            genero: true,
             avatar: true,
           },
         },

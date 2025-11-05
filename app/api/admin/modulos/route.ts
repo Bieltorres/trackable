@@ -40,12 +40,18 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { titulo, descricao, ordem, aulasSelecionadas, cursosSelecionados } =
-      body;
+    const {
+      nomeInterno,
+      titulo,
+      descricao,
+      ordem,
+      aulasSelecionadas,
+      cursosSelecionados,
+    } = body;
 
-    if (!titulo || !descricao) {
+    if (!nomeInterno || !titulo || !descricao) {
       return NextResponse.json(
-        { error: "Título e descrição são obrigatórios" },
+        { error: "Nome interno, título e descrição são obrigatórios" },
         { status: 400 }
       );
     }
@@ -68,6 +74,7 @@ export async function POST(req: Request) {
     // cria o módulo
     const novoModulo = await prisma.modulo.create({
       data: {
+        nomeInterno,
         titulo,
         descricao,
         ordem: ordemNumero,
