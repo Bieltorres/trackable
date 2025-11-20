@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
     const userId = await getUserFromToken(request);
 
     const meusCursos = await prisma.usuarioCurso.findMany({
-      where: { usuarioId: userId },
+      where: {
+        usuarioId: userId,
+        suspenso: false, // Não mostrar cursos suspensos
+        reembolsado: false, // Não mostrar cursos reembolsados
+      },
       include: {
         curso: {
           include: {

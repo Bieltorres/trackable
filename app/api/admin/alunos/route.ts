@@ -108,6 +108,8 @@ export async function GET(req: NextRequest) {
           totalAulas: totalAulasCurso,
           dataInicio: uc.dataInicio,
           dataCompra: uc.dataCompra,
+          suspenso: uc.suspenso,
+          reembolsado: uc.reembolsado,
         };
       });
 

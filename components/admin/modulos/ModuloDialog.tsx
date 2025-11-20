@@ -168,7 +168,7 @@ export function ModuloDialog({
         </DialogHeader>
 
         <div className="w-full space-y-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="flex gap-4 flex-col">
             <div>
               <Label>Nome interno</Label>
               <Input

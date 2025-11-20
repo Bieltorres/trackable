@@ -39,6 +39,22 @@ export async function GET(
       );
     }
 
+    // verificar se o curso está suspenso
+    if (usuarioCurso.suspenso) {
+      return NextResponse.json(
+        { error: "Seu acesso a este curso foi temporariamente suspenso. Entre em contato com o suporte." },
+        { status: 403 }
+      );
+    }
+
+    // verificar se o curso foi reembolsado
+    if (usuarioCurso.reembolsado) {
+      return NextResponse.json(
+        { error: "Este curso foi reembolsado e o acesso foi removido." },
+        { status: 403 }
+      );
+    }
+
     // buscar curso alinhado ao schema
     const curso = await prisma.curso.findUnique({
       where: { id },

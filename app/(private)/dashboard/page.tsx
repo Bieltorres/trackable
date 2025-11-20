@@ -26,14 +26,17 @@ type CategoriaApi = {
   cor: string;
   icone: string;
   totalCursos: number;
+  customSvgUrl?: string;
 };
 
 type CategoriaCard = {
+  id?: string;
   nome: string;
   icon: ElementType;
   cor: string;
   descricao: string;
   cursos: number;
+  customSvgUrl?: string;
 };
 
 export default function DashboardPage() {
@@ -173,7 +176,9 @@ export default function DashboardPage() {
       cor: string;
       icone: string;
       totalCursos?: number;
+      customSvgUrl?: string;
     }) => {
+      console.log("➕ Criando categoria:", categoria);
       setCategoriasDb((prev) => {
         const novaCategoria: CategoriaApi = {
           id: categoria.id,
@@ -181,6 +186,7 @@ export default function DashboardPage() {
           cor: categoria.cor,
           icone: categoria.icone,
           totalCursos: categoria.totalCursos ?? 0,
+          customSvgUrl: categoria.customSvgUrl,
         };
 
         const filtradas = prev.filter(
@@ -192,6 +198,37 @@ export default function DashboardPage() {
     },
     []
   );
+
+  const handleCategoriaUpdated = useCallback(
+    (categoria: {
+      id: string;
+      nome: string;
+      cor: string;
+      icone: string;
+      totalCursos?: number;
+      customSvgUrl?: string;
+    }) => {
+      console.log("🔄 Atualizando categoria:", categoria);
+      setCategoriasDb((prev) =>
+        prev.map((cat) =>
+          cat.id === categoria.id
+            ? {
+                ...cat,
+                nome: categoria.nome,
+                cor: categoria.cor,
+                icone: categoria.icone,
+                customSvgUrl: categoria.customSvgUrl,
+              }
+            : cat
+        )
+      );
+    },
+    []
+  );
+
+  const handleCategoriaDeleted = useCallback((categoriaId: string) => {
+    setCategoriasDb((prev) => prev.filter((cat) => cat.id !== categoriaId));
+  }, []);
   const cursosComProgresso = cursos.map((curso) => {
     const meuCurso = meusCursos.find((mc) => mc.cursoId === curso.id);
 
@@ -280,11 +317,13 @@ export default function DashboardPage() {
         cursosRelacionados > 0 ? cursosRelacionados : categoria.totalCursos;
 
       return {
+        id: categoria.id,
         nome: categoria.nome,
         icon: IconComponent,
         cor: categoria.cor || "#3B82F6",
         descricao: `Explore cursos de ${categoria.nome}`,
         cursos: totalCursos,
+        customSvgUrl: categoria.customSvgUrl,
       };
     });
   }, [categoriasDb, cursos]);
@@ -326,6 +365,8 @@ export default function DashboardPage() {
             loading={categoriasDbLoading || cursosLoading}
             isAdmin={user?.role === "admin"}
             onCategoriaCreated={handleCategoriaCreated}
+            onCategoriaUpdated={handleCategoriaUpdated}
+            onCategoriaDeleted={handleCategoriaDeleted}
           />
 
           {/* Filtros e Busca */}

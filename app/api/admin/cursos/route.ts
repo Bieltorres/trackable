@@ -56,7 +56,10 @@ export async function GET(req: NextRequest) {
         descricao: curso.descricao,
         categoria: curso.categoria?.nome,
         instrutores: curso.instrutores.map((ci) => ci.instrutor.nome) || [],
+        gratuito: curso.gratuito,
         preco: curso.preco,
+        precoOriginal: curso.precoOriginal,
+        desconto: curso.desconto,
         nivel: curso.nivel,
         status: curso.status,
         thumbnail: curso.thumbnail,
@@ -118,7 +121,10 @@ export async function POST(req: NextRequest) {
       categoriaId: string;
       instrutoresIds: string[];
       modulosSelecionados?: string[];
+      gratuito: boolean;
       preco?: number;
+      precoOriginal?: number;
+      desconto?: number;
       nivel: string;
       status?: string;
       thumbnail?: string;
@@ -131,7 +137,10 @@ export async function POST(req: NextRequest) {
       categoriaId,
       instrutoresIds,
       modulosSelecionados = [],
+      gratuito,
       preco,
+      precoOriginal,
+      desconto,
       nivel,
       status,
       thumbnail,
@@ -154,6 +163,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validar curso pago deve ter preço
+    if (!gratuito && (!preco || preco <= 0)) {
+      return NextResponse.json(
+        { error: "Cursos pagos devem ter um preço maior que zero" },
+        { status: 400 }
+      );
+    }
+
     const novoCurso = await prisma.curso.create({
       data: {
         nomeInterno,
@@ -161,7 +178,10 @@ export async function POST(req: NextRequest) {
         descricao,
         nivel,
         categoria: { connect: { id: categoriaId } },
-        preco,
+        gratuito,
+        preco: gratuito ? null : preco,
+        precoOriginal: gratuito ? null : precoOriginal,
+        desconto: gratuito ? null : desconto,
         status: status ?? "publicado",
         thumbnail,
         instrutores: {

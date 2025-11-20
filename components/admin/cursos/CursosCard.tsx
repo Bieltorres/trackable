@@ -28,11 +28,22 @@ export function CursoCard({ curso, onEdit, onDelete }: CursoCardProps) {
           </p>
 
           <div className="text-xs text-muted-foreground mt-2">
-            <span>Categoria: {curso.categoria}</span> |{" "}
+            <span>
+              Categoria:{" "}
+              {typeof curso.categoria === "string"
+                ? curso.categoria
+                : curso.categoria?.nome || "Sem categoria"}
+            </span>{" "}
+            |{" "}
             <span>
               Instrutores:{" "}
               {Array.isArray(curso.instrutores) && curso.instrutores.length > 0
-                ? curso.instrutores.join(", ")
+                ? typeof curso.instrutores[0] === "string"
+                  ? curso.instrutores.join(", ")
+                  : curso.instrutores
+                      .map((i: any) => i.instrutor?.nome || i.nome)
+                      .filter(Boolean)
+                      .join(", ") || "Nenhum instrutor"
                 : "Nenhum instrutor"}
             </span>{" "}
             |{" "}

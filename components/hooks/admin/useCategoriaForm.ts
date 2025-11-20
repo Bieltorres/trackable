@@ -2,7 +2,10 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
-export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
+export function useCategoriaForm(
+  onSuccess?: (categoria: any) => void,
+  onBeforeSubmit?: () => Promise<string | null>
+) {
   const { toast } = useToast();
   const ICON_OPTIONS = [
     "BookOpen",
@@ -22,10 +25,12 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
     ICON_OPTIONS[Math.floor(Math.random() * ICON_OPTIONS.length)];
 
   const [isLoading, setIsLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     cor: "#3B82F6",
     icone: getRandomIcon(),
+    customSvgUrl: null as string | null,
   });
 
   const randomizeIcon = () => {
@@ -48,10 +53,27 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/admin/categorias", {
-        method: "POST",
+      // Se houver um callback de pré-envio (ex: upload de SVG), executar primeiro
+      let updatedFormData = { ...formData };
+      if (onBeforeSubmit) {
+        const svgUrl = await onBeforeSubmit();
+        if (svgUrl) {
+          updatedFormData.customSvgUrl = svgUrl;
+          setFormData(updatedFormData);
+        }
+      }
+
+      const url = editingId
+        ? `/api/admin/categorias/${editingId}`
+        : "/api/admin/categorias";
+      const method = editingId ? "PUT" : "POST";
+
+      console.log("🚀 Enviando para API:", { url, method, formData: updatedFormData });
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updatedFormData),
       });
 
       if (response.ok) {
@@ -60,25 +82,33 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
           nome: "",
           cor: "#3B82F6",
           icone: getRandomIcon(),
+          customSvgUrl: null,
         });
+        setEditingId(null);
         toast({
           title: "Sucesso",
-          description: "Categoria criada com sucesso!",
+          description: editingId
+            ? "Categoria atualizada com sucesso!"
+            : "Categoria criada com sucesso!",
         });
-        onSuccess?.(data.categoria);
+        onSuccess?.(data.categoria || data);
       } else {
         const error = await response.json();
         toast({
           title: "Erro",
-          description: error.error || "Erro ao criar categoria",
+          description:
+            error.error ||
+            (editingId ? "Erro ao atualizar categoria" : "Erro ao criar categoria"),
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Erro ao criar categoria:", error);
+      console.error("Erro ao salvar categoria:", error);
       toast({
         title: "Erro",
-        description: "Erro ao criar categoria",
+        description: editingId
+          ? "Erro ao atualizar categoria"
+          : "Erro ao criar categoria",
         variant: "destructive",
       });
     } finally {
@@ -90,6 +120,8 @@ export function useCategoriaForm(onSuccess?: (categoria: any) => void) {
     formData,
     setFormData,
     isLoading,
+    editingId,
+    setEditingId,
     handleSubmit,
     randomizeIcon,
   };

@@ -30,7 +30,8 @@ interface CursoComProgresso {
   avaliacao: number;
   status: string;
   adquirido: boolean;
-  preco: number;
+  gratuito: boolean;
+  preco: number | null;
   precoOriginal?: number | null;
   desconto?: number | null;
   mediaAvaliacoes?: number;
@@ -227,8 +228,17 @@ export function CourseCard({
                   onCourseClick(curso);
                 }}
               >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Adquirir
+                {curso.gratuito || !curso.preco || Number(curso.preco) === 0 ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Grátis
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    R$ {Number(curso.preco).toFixed(2)}
+                  </>
+                )}
               </Button>
             </>
           ) : (

@@ -34,7 +34,11 @@ export function AulaCard({ aula, onEdit, onDelete, onView }: AulaCardProps) {
 
         <div className="flex-grow min-w-0">
           <div className="flex justify-between items-start gap-2">
-            <h4 className="font-semibold text-lg truncate">{aula.titulo}</h4>
+            <h4 className="font-semibold text-lg truncate">
+              {aula.nomeInterno
+                ? `${aula.nomeInterno} — ${aula.titulo}`
+                : aula.titulo}
+            </h4>
             {aula.duracao && (
               <Badge variant="secondary" className="flex-shrink-0">
                 {aula.duracao}

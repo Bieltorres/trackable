@@ -59,6 +59,7 @@ export async function PUT(
       thumbnail,
       categoriaId,
       nivel,
+      gratuito,
       preco,
       precoOriginal,
       desconto,
@@ -70,6 +71,14 @@ export async function PUT(
       modulosSelecionados,
     } = body;
 
+    // Validar curso pago deve ter preço
+    if (gratuito === false && (!preco || parseFloat(preco) <= 0)) {
+      return NextResponse.json(
+        { error: "Cursos pagos devem ter um preço maior que zero" },
+        { status: 400 }
+      );
+    }
+
     // Atualizar o curso
     const updateData: any = {
       titulo,
@@ -77,9 +86,10 @@ export async function PUT(
       thumbnail,
       categoriaId,
       nivel,
-      preco: preco ? parseFloat(preco) : null,
-      precoOriginal: precoOriginal ? parseFloat(precoOriginal) : null,
-      desconto: desconto ? parseInt(desconto) : null,
+      gratuito: gratuito !== undefined ? gratuito : false,
+      preco: gratuito ? null : (preco ? parseFloat(preco) : null),
+      precoOriginal: gratuito ? null : (precoOriginal ? parseFloat(precoOriginal) : null),
+      desconto: gratuito ? null : (desconto ? parseInt(desconto) : null),
       status,
       bestseller: bestseller === true || bestseller === "true",
       novo: novo === true || novo === "true",

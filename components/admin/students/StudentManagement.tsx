@@ -9,6 +9,9 @@ import {
   GraduationCap,
   BarChart3,
   Loader2,
+  MoreVertical,
+  Mail,
+  Settings,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +27,13 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ManageCoursesDialog } from "./ManageCoursesDialog";
 
 type CursoResumo = {
   id: string;
@@ -34,6 +44,8 @@ type CursoResumo = {
   totalAulas: number;
   dataInicio: string | null;
   dataCompra: string | null;
+  suspenso?: boolean;
+  reembolsado?: boolean;
 };
 
 type AlunoResumo = {
@@ -89,6 +101,8 @@ export function StudentManagement() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cursoFiltro, setCursoFiltro] = useState<string>("todos");
+  const [sendingEmailTo, setSendingEmailTo] = useState<string | null>(null);
+  const [managingCoursesAluno, setManagingCoursesAluno] = useState<AlunoResumo | null>(null);
 
   const carregarAlunos = async () => {
     try {
@@ -116,6 +130,33 @@ export function StudentManagement() {
   useEffect(() => {
     carregarAlunos();
   }, []);
+
+  const enviarEmailRedefinicao = async (alunoId: string, alunoNome: string) => {
+    try {
+      setSendingEmailTo(alunoId);
+      const response = await fetch(`/api/admin/usuarios/${alunoId}/send-reset-email`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao enviar email");
+      }
+
+      toast({
+        title: "Email enviado",
+        description: `Link de redefinição enviado para ${alunoNome} com sucesso!`,
+      });
+    } catch (error) {
+      console.error("Erro ao enviar email de redefinição:", error);
+      toast({
+        title: "Erro ao enviar email",
+        description: "Não foi possível enviar o email. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmailTo(null);
+    }
+  };
 
   const cursosDisponiveis = useMemo(() => {
     const mapa = new Map<string, string>();
@@ -289,8 +330,9 @@ export function StudentManagement() {
                 key={aluno.id}
                 className="rounded-lg border bg-card p-5 shadow-sm transition hover:border-primary"
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-1 flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       {aluno.info?.avatar ? (
                         <AvatarImage src={aluno.info.avatar} alt={aluno.nome} />
@@ -319,19 +361,52 @@ export function StudentManagement() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-start gap-2 md:items-end">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <BookOpen className="h-4 w-4" />
-                      {aluno.totalCursos} matriculas
+                    <div className="flex flex-col items-start gap-2 md:items-end">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <BookOpen className="h-4 w-4" />
+                        {aluno.totalCursos} matriculas
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <GraduationCap className="h-4 w-4" />
+                        {aluno.totalConcluidos} cursos concluidos
+                      </div>
+                      <Badge variant="secondary">
+                        Progresso medio: {aluno.progressoMedio}%
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <GraduationCap className="h-4 w-4" />
-                      {aluno.totalConcluidos} cursos concluidos
-                    </div>
-                    <Badge variant="secondary">
-                      Progresso medio: {aluno.progressoMedio}%
-                    </Badge>
                   </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={sendingEmailTo === aluno.id}
+                      >
+                        {sendingEmailTo === aluno.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MoreVertical className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => setManagingCoursesAluno(aluno)}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Gerenciar cursos
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => enviarEmailRedefinicao(aluno.id, aluno.nome)}
+                        disabled={sendingEmailTo === aluno.id}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Enviar link de redefinição
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {aluno.cursos.length > 0 ? (
@@ -354,11 +429,19 @@ export function StudentManagement() {
                           totalAulas > 0
                             ? `${aulasAssistidas}/${totalAulas} aulas assistidas`
                             : `${aulasAssistidas} aulas registradas`;
+                        const isSuspenso = curso.suspenso ?? false;
+                        const isReembolsado = curso.reembolsado ?? false;
 
                         return (
                           <div
                             key={curso.id}
-                            className="rounded-md border bg-muted/20 p-4"
+                            className={`rounded-md border p-4 ${
+                              isReembolsado
+                                ? "border-red-300 bg-red-50/50 dark:bg-red-950/10"
+                                : isSuspenso
+                                ? "border-orange-300 bg-orange-50/50 dark:bg-orange-950/10"
+                                : "bg-muted/20"
+                            }`}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
@@ -369,15 +452,33 @@ export function StudentManagement() {
                                   {aulasInfo}
                                 </p>
                               </div>
-                              <Badge
-                                variant={
-                                  curso.status === "concluido"
-                                    ? "default"
-                                    : "outline"
-                                }
-                              >
-                                {statusTexto}
-                              </Badge>
+                              <div className="flex flex-col gap-1 items-end">
+                                {isReembolsado && (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-red-500 bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+                                  >
+                                    Reembolsado
+                                  </Badge>
+                                )}
+                                {isSuspenso && (
+                                  <Badge
+                                    variant="outline"
+                                    className="border-orange-500 bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400"
+                                  >
+                                    Suspenso
+                                  </Badge>
+                                )}
+                                <Badge
+                                  variant={
+                                    curso.status === "concluido"
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                >
+                                  {statusTexto}
+                                </Badge>
+                              </div>
                             </div>
                             <Progress value={progresso} className="mt-3" />
                             <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
@@ -405,6 +506,13 @@ export function StudentManagement() {
           </div>
         )}
       </CardContent>
+
+      <ManageCoursesDialog
+        open={managingCoursesAluno !== null}
+        onOpenChange={(open) => !open && setManagingCoursesAluno(null)}
+        aluno={managingCoursesAluno}
+        onSuccess={carregarAlunos}
+      />
     </Card>
   );
 }

@@ -265,7 +265,8 @@ export function AulaDialog({
       setSelectedFiles([]);
       resetFileInput();
       setIsDragActive(false);
-      onAulaCreated(aulaSalva);
+      // No POST, a API retorna { message, aula }, no PUT retorna a aula diretamente
+      onAulaCreated(aulaSalva.aula || aulaSalva);
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao salvar aula:", error);
@@ -292,6 +293,17 @@ export function AulaDialog({
         </DialogHeader>
 
         <div className="w-full space-y-6">
+          <div>
+            <Label>Nome Interno</Label>
+            <Input
+              placeholder="Identificação interna da aula"
+              value={formData.nomeInterno}
+              onChange={(e) =>
+                setFormData({ ...formData, nomeInterno: e.target.value })
+              }
+            />
+          </div>
+
           <div>
             <Label>Título da Aula</Label>
             <Input

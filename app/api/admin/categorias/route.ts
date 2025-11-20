@@ -13,22 +13,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-
-      const user = await prisma.user.findUnique({
-        where: { email: decoded.email },
-        select: { role: true },
-      });
-
-      if (user?.role !== "admin") {
-        return NextResponse.json(
-          { error: "Acesso negado. Apenas administradores." },
-          { status: 403 }
-        );
-      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
+      userId = decoded.sub;
     } catch (error) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Acesso negado. Apenas administradores." },
+        { status: 403 }
+      );
     }
 
     const categorias = await prisma.categoria.findMany({
@@ -58,24 +62,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-      const user = await prisma.user.findUnique({
-        where: { email: decoded.email },
-        select: { role: true },
-      });
-
-      if (user?.role !== "admin") {
-        return NextResponse.json(
-          { error: "Acesso negado. Apenas administradores." },
-          { status: 403 }
-        );
-      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+        sub: string;
+      };
+      userId = decoded.sub;
     } catch (error) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const { nome, cor, icone } = await req.json();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user || user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Acesso negado. Apenas administradores." },
+        { status: 403 }
+      );
+    }
+
+    const { nome, cor, icone, customSvgUrl } = await req.json();
 
     if (!nome) {
       return NextResponse.json(
@@ -101,6 +110,7 @@ export async function POST(req: NextRequest) {
         nome,
         cor: cor || "#3B82F6",
         icone: icone || "BookOpen",
+        customSvgUrl: customSvgUrl || null,
       },
     });
 

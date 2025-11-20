@@ -1,5 +1,5 @@
 ﻿// components/admin/course-management/cursos/CursoDialog.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Settings, Save, PlusCircle } from "lucide-react";
+import { Settings, Save, PlusCircle, Upload, X } from "lucide-react";
 import { useCursoForm } from "@/components/hooks/admin/useCursoForm";
 import { CategoriaDialog } from "../dialogs/CategoriaDialog";
 import { InstrutorDialog } from "../dialogs/InstrutorDialog";
@@ -44,6 +44,10 @@ export function CursoDialog({
 }: CursoDialogProps) {
   const [categoriaDialogOpen, setCategoriaDialogOpen] = useState(false);
   const [instrutorDialogOpen, setInstrutorDialogOpen] = useState(false);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const cursoForm = useCursoForm((newCurso) => {
     onCursoCreated(newCurso);
@@ -69,11 +73,20 @@ export function CursoDialog({
         titulo: editingCurso.titulo || "",
         descricao: editingCurso.descricao || "",
         instrutoresIds,
-        categoriaId: editingCurso.categoriaId || "",
+        categoriaId: editingCurso.categoriaId || editingCurso.categoria?.id || "",
+        gratuito: editingCurso.gratuito || false,
         preco: editingCurso.preco?.toString() || "",
+        precoOriginal: editingCurso.precoOriginal?.toString() || "",
+        desconto: editingCurso.desconto?.toString() || "",
         nivel: editingCurso.nivel || "iniciante",
         modulosSelecionados,
+        thumbnail: editingCurso.thumbnail || null,
       });
+
+      // Set thumbnail preview if exists
+      if (editingCurso.thumbnail) {
+        setThumbnailPreview(editingCurso.thumbnail);
+      }
     } else {
       // Resetar formulário ao criar novo
       cursoForm.setFormData({
@@ -82,19 +95,98 @@ export function CursoDialog({
         descricao: "",
         instrutoresIds: [],
         categoriaId: "",
+        gratuito: false,
         preco: "",
+        precoOriginal: "",
+        desconto: "",
         nivel: "iniciante",
         modulosSelecionados: [],
+        thumbnail: null,
       });
+      setThumbnailPreview(null);
+      setThumbnailFile(null);
     }
   }, [editingCurso, editingId, open]);
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.startsWith("image/")) {
+      toast.error("Apenas arquivos de imagem são permitidos");
+      return;
+    }
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB");
+      return;
+    }
+
+    setThumbnailFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setThumbnailPreview(previewUrl);
+  };
+
+  const handleRemoveThumbnail = () => {
+    if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(thumbnailPreview);
+    }
+    setThumbnailPreview(null);
+    setThumbnailFile(null);
+    cursoForm.setFormData({
+      ...cursoForm.formData,
+      thumbnail: null,
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const uploadThumbnailToS3 = async (file: File): Promise<string | null> => {
+    try {
+      setUploadingThumbnail(true);
+      const formData = new FormData();
+      formData.append("thumbnail", file);
+
+      const response = await fetch("/api/upload/thumbnail", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao fazer upload da thumbnail");
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error: any) {
+      console.error("Erro ao fazer upload:", error);
+      toast.error(error.message || "Erro ao fazer upload da thumbnail");
+      return null;
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
 
   const handleSubmit = async () => {
     console.log("CursoDialog handleSubmit, editingId:", editingId);
 
+    // Upload da thumbnail se houver arquivo novo
+    let thumbnailUrl = cursoForm.formData.thumbnail;
+    if (thumbnailFile) {
+      const uploadedUrl = await uploadThumbnailToS3(thumbnailFile);
+      if (uploadedUrl) {
+        thumbnailUrl = uploadedUrl;
+      }
+    }
+
     if (!editingId) {
       console.log("Modo CRIAÇÃO");
-      cursoForm.handleSubmit();
+      // Passar a thumbnail diretamente para o handleSubmit
+      cursoForm.handleSubmit({ thumbnail: thumbnailUrl });
       return;
     }
 
@@ -110,9 +202,13 @@ export function CursoDialog({
           descricao: cursoForm.formData.descricao,
           categoriaId: cursoForm.formData.categoriaId,
           nivel: cursoForm.formData.nivel,
+          gratuito: cursoForm.formData.gratuito,
           preco: cursoForm.formData.preco,
+          precoOriginal: cursoForm.formData.precoOriginal,
+          desconto: cursoForm.formData.desconto,
           instrutoresIds: cursoForm.formData.instrutoresIds,
           modulosSelecionados: cursoForm.formData.modulosSelecionados,
+          thumbnail: thumbnailUrl,
         }),
       });
 
@@ -183,6 +279,59 @@ export function CursoDialog({
                   })
                 }
               />
+            </div>
+
+            {/* Upload de Thumbnail */}
+            <div className="space-y-2">
+              <Label>Imagem de Capa (Thumbnail)</Label>
+              <div className="flex flex-col gap-3 w-full">
+                {thumbnailPreview ? (
+                  <div className="relative w-full">
+                    <img
+                      src={thumbnailPreview}
+                      alt="Preview da thumbnail"
+                      className="w-full h-64 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={handleRemoveThumbnail}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="thumbnail-upload"
+                    className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="h-10 w-10 text-muted-foreground mb-3" />
+                      <p className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-semibold">Clique para fazer upload</span> ou arraste a imagem
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG ou WEBP (máx. 5MB)
+                      </p>
+                    </div>
+                    <input
+                      id="thumbnail-upload"
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleThumbnailUpload}
+                    />
+                  </label>
+                )}
+                {uploadingThumbnail && (
+                  <p className="text-sm text-muted-foreground">
+                    Fazendo upload da imagem...
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -271,21 +420,6 @@ export function CursoDialog({
             </div>
 
             <div>
-              <Label>Preço</Label>
-              <Input
-                type="number"
-                placeholder="Preço (ex: 297.00)"
-                value={cursoForm.formData.preco}
-                onChange={(e) =>
-                  cursoForm.setFormData({
-                    ...cursoForm.formData,
-                    preco: e.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div>
               <Label htmlFor="nivel">Nível do Curso</Label>
               <select
                 id="nivel"
@@ -303,6 +437,96 @@ export function CursoDialog({
                 <option value="avancado">Avançado</option>
               </select>
             </div>
+
+            <div className="space-y-3">
+              <Label>Tipo de Curso</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gratuito"
+                    value="true"
+                    checked={cursoForm.formData.gratuito === true}
+                    onChange={() =>
+                      cursoForm.setFormData({
+                        ...cursoForm.formData,
+                        gratuito: true,
+                        preco: "",
+                        precoOriginal: "",
+                        desconto: "",
+                      })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <span>Gratuito</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="gratuito"
+                    value="false"
+                    checked={cursoForm.formData.gratuito === false}
+                    onChange={() =>
+                      cursoForm.setFormData({
+                        ...cursoForm.formData,
+                        gratuito: false,
+                      })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <span>Pago</span>
+                </label>
+              </div>
+            </div>
+
+            {cursoForm.formData.gratuito === false && (
+              <div className="space-y-4 p-4 border rounded-md bg-muted/30">
+                <div>
+                  <Label>Preço</Label>
+                  <Input
+                    type="number"
+                    placeholder="Preço (ex: 297.00)"
+                    value={cursoForm.formData.preco}
+                    onChange={(e) =>
+                      cursoForm.setFormData({
+                        ...cursoForm.formData,
+                        preco: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>Preço Original (opcional)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Preço original (ex: 497.00)"
+                    value={cursoForm.formData.precoOriginal || ""}
+                    onChange={(e) =>
+                      cursoForm.setFormData({
+                        ...cursoForm.formData,
+                        precoOriginal: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>Desconto % (opcional)</Label>
+                  <Input
+                    type="number"
+                    placeholder="Desconto em porcentagem (ex: 40)"
+                    value={cursoForm.formData.desconto || ""}
+                    onChange={(e) =>
+                      cursoForm.setFormData({
+                        ...cursoForm.formData,
+                        desconto: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Vincular Módulos</Label>

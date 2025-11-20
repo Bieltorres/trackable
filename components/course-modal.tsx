@@ -79,39 +79,44 @@ export function CourseModal({ cursoId, isOpen, onClose }: CourseModalProps) {
   const handlePurchase = async () => {
     if (!curso) return;
 
+    const isGratuito = curso.gratuito || !curso.preco || Number(curso.preco) === 0;
+
     setIsProcessingPayment(true);
 
     try {
-      // TODO: Implementar integração real com gateway de pagamento
-      const response = await fetch(`/api/cursos/${curso.id}/comprar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          paymentMethod,
-          preco: curso.preco,
-        }),
-      });
+      if (isGratuito) {
+        // Para cursos gratuitos, apenas registrar a matrícula
+        const response = await fetch(`/api/cursos/${curso.id}/matricular`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error("Erro no processamento do pagamento");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Erro ao se matricular no curso");
+        }
+
+        toast({
+          title: "Sucesso!",
+          description: "Você foi matriculado no curso! Acesse seus cursos para começar.",
+        });
+
+        onClose();
+      } else {
+        // Para cursos pagos, ainda não implementado
+        toast({
+          title: "Em breve",
+          description: "O sistema de pagamento será implementado em breve.",
+          variant: "default",
+        });
       }
-
-      const data = await response.json();
-
-      toast({
-        title: "Sucesso!",
-        description:
-          "Pagamento processado com sucesso! Você já tem acesso ao curso.",
-      });
-
-      onClose();
-    } catch (error) {
-      console.error("Erro no pagamento:", error);
+    } catch (error: any) {
+      console.error("Erro:", error);
       toast({
         title: "Erro",
-        description: "Erro no processamento do pagamento. Tente novamente.",
+        description: error.message || "Erro ao processar sua solicitação. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -167,6 +172,60 @@ export function CourseModal({ cursoId, isOpen, onClose }: CourseModalProps) {
           <DialogTitle>
             <VisuallyHidden>Carregando curso</VisuallyHidden>
           </DialogTitle>
+
+          {/* Loading Skeleton */}
+          <div className="animate-pulse">
+            {/* Header Skeleton */}
+            <div className="p-6 pb-4">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-3"></div>
+              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+
+            {/* Video Preview Skeleton */}
+            <div className="px-6 mb-6">
+              <div className="aspect-video bg-gray-200 rounded-lg max-w-4xl mx-auto"></div>
+            </div>
+
+            {/* Reviews Skeleton */}
+            <div className="px-6 mb-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="h-6 bg-gray-200 rounded w-64 mx-auto mb-6"></div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-50 p-6 rounded-lg">
+                      <div className="flex items-center mb-4">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full mr-3"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <div key={star} className="h-4 w-4 bg-gray-200 rounded"></div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Price and Button Skeleton */}
+            <div className="px-6 pb-6">
+              <div className="max-w-md mx-auto">
+                <div className="h-12 bg-gray-200 rounded w-32 mx-auto mb-4"></div>
+                <div className="space-y-2 mb-6">
+                  <div className="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-56 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-44 mx-auto"></div>
+                </div>
+                <div className="h-14 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -179,6 +238,9 @@ export function CourseModal({ cursoId, isOpen, onClose }: CourseModalProps) {
           <DialogTitle>
             <VisuallyHidden>Curso não encontrado</VisuallyHidden>
           </DialogTitle>
+          <div className="p-6 text-center">
+            <p className="text-muted-foreground">Curso não encontrado</p>
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -306,24 +368,32 @@ export function CourseModal({ cursoId, isOpen, onClose }: CourseModalProps) {
         <div className="px-6 pb-6">
           <div className="max-w-md mx-auto">
             {/* Preço */}
-            {curso.preco && (
-              <div className="text-center mb-4">
-                <p className="text-3xl font-bold text-green-600">
-                  R${" "}
-                  {curso.preco.toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </p>
-                {curso.precoOriginal && curso.precoOriginal > curso.preco && (
-                  <p className="text-lg text-gray-500 line-through">
+            <div className="text-center mb-4">
+              {curso.gratuito || !curso.preco || Number(curso.preco) === 0 ? (
+                <div className="inline-block">
+                  <Badge className="text-2xl font-bold bg-green-600 text-white px-6 py-2">
+                    GRÁTIS
+                  </Badge>
+                </div>
+              ) : (
+                <>
+                  <p className="text-3xl font-bold text-green-600">
                     R${" "}
-                    {curso.precoOriginal.toLocaleString("pt-BR", {
+                    {Number(curso.preco).toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                     })}
                   </p>
-                )}
-              </div>
-            )}
+                  {curso.precoOriginal && Number(curso.precoOriginal) > Number(curso.preco) && (
+                    <p className="text-lg text-gray-500 line-through">
+                      R${" "}
+                      {Number(curso.precoOriginal).toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
 
             {/* Informações adicionais */}
             <div className="text-center mb-6 text-sm text-muted-foreground">
@@ -348,7 +418,9 @@ export function CourseModal({ cursoId, isOpen, onClose }: CourseModalProps) {
               ) : (
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5" />
-                  Adquirir Agora
+                  {curso.gratuito || !curso.preco || Number(curso.preco) === 0
+                    ? "Inscrever-se Gratuitamente"
+                    : "Adquirir Agora"}
                 </div>
               )}
             </Button>

@@ -1,5 +1,6 @@
 // prisma/seed.js
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
@@ -27,7 +28,7 @@ async function main() {
     data: {
       email: "admin@plataforma.com",
       name: "Administrador",
-      password: "admin123",
+      password: await bcrypt.hash("admin123", 10),
       role: "admin",
       userInfo: { create: { genero: "masculino" } },
     },
@@ -37,7 +38,7 @@ async function main() {
     data: {
       email: "instrutor@plataforma.com",
       name: "Instrutor",
-      password: "instrutor123",
+      password: await bcrypt.hash("instrutor123", 10),
       role: "instructor",
       userInfo: { create: { genero: "masculino" } },
     },
@@ -47,7 +48,7 @@ async function main() {
     data: {
       email: "aluno@plataforma.com",
       name: "Aluno Teste",
-      password: "aluno123",
+      password: await bcrypt.hash("aluno123", 10),
       role: "student",
       userInfo: {
         create: { genero: "feminino" },
@@ -85,9 +86,10 @@ async function main() {
         descricao: `Descrição do curso ${i + 1}`,
         categoriaId: categorias[i].id,
         nivel: i === 0 ? "iniciante" : i === 1 ? "intermediario" : "avancado",
-        preco: (100 + i * 50).toString(), // Decimal aceita string também
-        precoOriginal: "200",
-        desconto: 50,
+        gratuito: i === 0, // Primeiro curso é gratuito
+        preco: i === 0 ? null : (100 + i * 50).toString(), // Gratuito não tem preço
+        precoOriginal: i === 0 ? null : "200",
+        desconto: i === 0 ? null : 50,
         status: "publicado",
         bestseller: false,
         novo: i === 2, // só pra variar

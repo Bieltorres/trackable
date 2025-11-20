@@ -35,7 +35,8 @@ export interface Curso {
   descricao: string;
   thumbnail?: string | null;
   nivel: "iniciante" | "intermediario" | "avancado";
-  preco: number;
+  gratuito: boolean;
+  preco: number | null;
   precoOriginal?: number | null;
   desconto?: number | null;
   status: "rascunho" | "publicado" | "arquivado";

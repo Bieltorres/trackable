@@ -43,6 +43,22 @@ export async function GET(
       );
     }
 
+    // Verificar se o curso está suspenso
+    if (usuarioCurso.suspenso) {
+      return NextResponse.json(
+        { error: "Seu acesso a este curso foi temporariamente suspenso. Entre em contato com o suporte." },
+        { status: 403 }
+      );
+    }
+
+    // Verificar se o curso foi reembolsado
+    if (usuarioCurso.reembolsado) {
+      return NextResponse.json(
+        { error: "Este curso foi reembolsado e o acesso foi removido." },
+        { status: 403 }
+      );
+    }
+
     // Buscar aula com suas relações corretas
     const aula = await prisma.aula.findUnique({
       where: { id: aulaId },

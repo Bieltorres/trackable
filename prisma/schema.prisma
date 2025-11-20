@@ -64,10 +64,11 @@ model UserInfo {
 }
 
 model Categoria {
-  id    String @id @default(uuid())
-  nome  String @unique
-  cor   String @default("#3B82F6") // cor em hex para UI
-  icone String @default("BookOpen") // nome do ícone lucide
+  id        String  @id @default(uuid())
+  nome      String  @unique
+  cor       String  @default("#3B82F6") // cor em hex para UI
+  icone     String  @default("BookOpen") // nome do ícone lucide
+  customSvgUrl String? // URL do SVG customizado no S3 (opcional)
 
   cursos Curso[]
 
@@ -105,6 +106,7 @@ model Curso {
   preco         Decimal? @db.Decimal(10, 2)
   precoOriginal Decimal? @db.Decimal(10, 2)
   desconto      Int? // porcentagem de desconto
+  gratuito      Boolean  @default(false)
   status        String   @default("rascunho") // rascunho, publicado, arquivado
   bestseller    Boolean  @default(false)
   novo          Boolean  @default(false)
@@ -202,7 +204,9 @@ model UsuarioCurso {
   dataInicio DateTime?
   dataCompra DateTime  @default(now())
   precoGago  Decimal?  @db.Decimal(10, 2)
-  progresso  Int       @default(0) // porcentagem 0-100
+  progresso    Int     @default(0) // porcentagem 0-100
+  suspenso     Boolean @default(false) // indica se o acesso ao curso está suspenso
+  reembolsado  Boolean @default(false) // indica se o curso foi reembolsado
 
   usuario User  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   curso   Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)

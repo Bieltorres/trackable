@@ -167,7 +167,9 @@ export default function Sidebar({
 
             <ul className="space-y-1">
               {cursosFavoritos.map((curso) => {
-                const cursoActive = pathname === `/curso/${curso.id}`;
+                const cursoActive =
+                  pathname === `/curso/${curso.id}` ||
+                  pathname.startsWith(`/curso/${curso.id}/`);
                 return (
                   <li key={curso.id}>
                     <Link
